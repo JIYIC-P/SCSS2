@@ -5,7 +5,7 @@ import threading
 from numpy.ctypeslib import as_array
 from typing import Callable, Optional
 
-
+MAX_ARRY_LENGTH=6
 class ClassifierReceiver:
     """
     现有
@@ -67,23 +67,31 @@ class ClassifierReceiver:
         """
         回调函数，由 DLL 数据到达时触发
         """
-        if size % 4 != 0:
-            print(f"[警告] 数据大小 {size} 不是 4 的倍数，可能不是 float 数组！")
-            return
+        
+        if self.count_frame%5==0:
+ 
+            if size % 4 != 0:
+                print(f"[警告] 数据大小 {size} 不是 4 的倍数，可能不是 float 数组！")
+                return
+            float_count = size // 4
+            self.count_frame += 1
+            if self.count_frame == 640:
+                self.count_frame = 0
 
-        float_count = size // 4
-        self.count_frame += 1
-        if self.count_frame == 640:
-            self.count_frame = 0
+            FloatPtr = POINTER(c_float)
+            float_ptr = cast(p_frame, FloatPtr)
+            float_array_np = as_array(float_ptr, shape=(float_count,))  # 零拷贝视图
+            #values, counts = np.unique(arr.round(decimals), return_counts=True)
+            # 构造长度为5的统计结果
+            int_array = np.round(float_array_np).astype(np.uint8)
+            stat = np.bincount(int_array, MAX_ARRY_LENGTH=6)
 
-        FloatPtr = POINTER(c_float)
-        float_ptr = cast(p_frame, FloatPtr)
-        float_array_np = as_array(float_ptr, shape=(float_count,))  # 零拷贝视图
 
-        # --- 调用用户自定义回调（如果提供了）---
-        if self.on_transform_data is not None:
-            self.on_transform_data(float_array_np)  # 传入 numpy 数组 和 原始数据大小
-
+            # --- 调用用户自定义回调（如果提供了）---
+            if self.on_transform_data is not None:
+                #values, counts = np.unique(float_array_np.round(0), return_counts=True)
+                #self.on_transform_data(float_array_np)  # 传入 numpy 数组 和 原始数据大小
+                self.on_transform_data(stat)
     def _on_error(self, err_msg):
         err_str = err_msg.decode('utf-8', errors='ignore')
         print(f"[回调 错误] 接收线程出错: {err_str}")

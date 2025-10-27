@@ -32,16 +32,9 @@
 # 	count=count+1
 # #说明：函数的意义以及参数请参考手册，需要技术支持，请联系15911028547
 
-
-
-
-
-
-
 # Python3.6
 # 北京飞扬助力电子技术有限公司  www.fyying.com
 # 2025-10
-
 
 import time
 import threading
