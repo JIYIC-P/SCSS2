@@ -5,7 +5,7 @@ import threading
 from numpy.ctypeslib import as_array
 from typing import Callable, Optional
 
-MAX_ARRY_LENGTH=6
+MAX_ARRY_LENGTH=6#最大数值长度
 class ClassifierReceiver:
     """
     现有
