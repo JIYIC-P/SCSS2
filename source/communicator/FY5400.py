@@ -1,44 +1,160 @@
-#基于python3.6版本
-#北京飞扬助力电子技术有限公司 www.fyying.com
-#----------------------
+# #基于python3.6版本
+# #北京飞扬助力电子技术有限公司 www.fyying.com
+# #----------------------
 
-from ctypes import *#引入ctypes库
-import time#使用延时函数
+# from ctypes import *#引入ctypes库
+# import time#使用延时函数
 
-#下面两种调用DLL函数的方式都可以
-#dll=WinDLL("C:\Windows\System32\FY5400.dll")
-dll=windll.LoadLibrary(r"source\Lib\FY5400.dll")
+# #下面两种调用DLL函数的方式都可以
+# #dll=WinDLL("C:\Windows\System32\FY5400.dll")
+# dll=windll.LoadLibrary(r"source\Lib\FY5400.dll")
 
-hDev=dll.FY5400_OpenDevice(0)#获得句柄
-print("句柄值是" + str(hDev))
-print("程序开始运行")
+# hDev=dll.FY5400_OpenDevice(0)#获得句柄
+# print("句柄值是" + str(hDev))
+# print("程序开始运行")
 
 
-count=0
-while(count<1000):#循环1000次
+# count=0
+# while(count<1000):#循环1000次
 	
-	t1 = time.time()
-	#dll.FY5400_DO(hDev,0)#输出通道全部置低
-	#dll.FY5400_DO(hDev,65535)#输出通道全部置高
+# 	t1 = time.time()
+# 	#dll.FY5400_DO(hDev,0)#输出通道全部置低
+# 	#dll.FY5400_DO(hDev,65535)#输出通道全部置高
 
 	
-	didata=dll.FY5400_DI(hDev)#获得所有输入通道的状态
-	print("didata is " + str(didata))
+# 	didata=dll.FY5400_DI(hDev)#获得所有输入通道的状态
+# 	print("didata is " + str(didata))
 	
-	#dll.FY5400_EEPROM_WR(hDev,0,3)#地址0写入数据3 这个数据可以任意修改 范围0--255
-	#eedata=dll.FY5400_EEPROM_RD(hDev,0)#读取地址0的数据
-	#print("eeprom data is " + str(eedata))#显示数据
-	print(time.time()-t1)
-	count=count+1
-#说明：函数的意义以及参数请参考手册，需要技术支持，请联系15911028547
+# 	#dll.FY5400_EEPROM_WR(hDev,0,3)#地址0写入数据3 这个数据可以任意修改 范围0--255
+# 	#eedata=dll.FY5400_EEPROM_RD(hDev,0)#读取地址0的数据
+# 	#print("eeprom data is " + str(eedata))#显示数据
+# 	print(time.time()-t1)
+# 	count=count+1
+# #说明：函数的意义以及参数请参考手册，需要技术支持，请联系15911028547
 
 
 
 
+
+
+
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Python3.6
+# 北京飞扬助力电子技术有限公司  www.fyying.com
+# 2025-10
 """
-需求：
-创建一个类，用于实现板卡的IO操作，
-要求创建线程，每一段时间读取或写入办卡
-提供接口用于获取读到的数据，接受数据，写入到办卡。
-线程启动器和停止器。
+简易线程安全封装 FY5400 16位IO卡
+DLL加载方式完全沿用用户示例，不额外写原型
 """
+
+import time
+import threading
+from ctypes import windll
+
+# 1. 载入DLL（路径保持与用户示例一致）
+dll = windll.LoadLibrary(r"source\Lib\FY5400.dll")
+
+
+class FY5400IO:
+    """
+    16位并行IO卡线程安全封装
+    提供：
+        start()/stop()  —— 后台读线程启停
+        get_di()        —— 主线程随时拿到最新DI值
+        set_do(value)   —— 主线程立即更新DO输出
+        close()         —— 释放设备
+    """
+
+    def __init__(self, board_idx: int = 0):
+        """
+        打开设备，初始化缓存
+        :param board_idx: 板卡编号，默认0
+        """
+        self.hDev = dll.FY5400_OpenDevice(board_idx)
+        if not self.hDev:
+            raise RuntimeError("FY5400_OpenDevice 失败，请检查驱动/硬件连接")
+
+        # 线程相关
+        self._running = threading.Event()   # 用作退出标志
+        self._lock = threading.Lock()       # 保护共享缓存
+        self._di_cache = 0                  # 最新DI采样值
+        self._do_cache = 0                  # 当前DO输出值
+        self._thd = None                    # 后台线程对象
+
+        # 初始化DO为全0
+        self.set_do(0)
+
+    # ---------------- 对外接口 ----------------
+    def start(self, interval: float = 0.01):
+        """
+        启动后台读线程，循环采样DI
+        :param interval: 采样周期，秒
+        """
+        if self._running.is_set():
+            return
+        self._running.set()
+        self._thd = threading.Thread(
+            target=self._worker,
+            args=(interval,),
+            daemon=True
+        )
+        self._thd.start()
+
+    def stop(self):
+        """停止后台读线程"""
+        if self._running.is_set():
+            self._running.clear()
+            self._thd.join()
+            self._thd = None
+
+    def get_di(self) -> int:
+        """
+        线程安全读取最近一次DI值
+        :return: 16位DI数据
+        """
+        with self._lock:
+            return hex(self._di_cache)
+
+    def set_do(self, value: int):
+        """
+        线程安全写入16位DO
+        :param value: 0~0xFFFF
+        """
+        value &= 0xFFFF
+        with self._lock:
+            if value != self._do_cache:          # 减少无意义写
+                dll.FY5400_DO(self.hDev, int(value,16))  # 真正写硬件,写入十进制int
+                self._do_cache = value           # 更新缓存
+
+    def close(self):
+        """关闭设备，释放资源"""
+        self.stop()                       # 先停线程
+        dll.FY5400_CloseDevice(self.hDev)
+
+    # ---------------- 内部实现 ----------------
+    def _worker(self, interval: float):
+        """
+        后台线程函数：循环读DI
+        :param interval: 采样周期，秒
+        """
+        while self._running.is_set():
+            di = dll.FY5400_DI(self.hDev)      # 读硬件
+            with self._lock:
+                self._di_cache = di              # 更新缓存
+            time.sleep(interval)
+
+
+# ---------------- 简单测试 ----------------
+if __name__ == "__main__":
+    io = FY5400IO()          # 打开板卡
+    io.start(interval=0.01)  # 10ms采样
+
+    try:
+        for i in range(1):  # 跑1秒
+            di = io.get_di()
+            print(f"DI=0x{di:04X}  {di:016b}")
+            time.sleep(0.1)
+    finally:
+        io.set_do(0)  # 输出清零
+        io.close()    # 释放设备
