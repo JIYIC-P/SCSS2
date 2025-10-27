@@ -38,15 +38,10 @@
 
 
 
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # Python3.6
 # 北京飞扬助力电子技术有限公司  www.fyying.com
 # 2025-10
-"""
-简易线程安全封装 FY5400 16位IO卡
-DLL加载方式完全沿用用户示例，不额外写原型
-"""
+
 
 import time
 import threading
@@ -68,8 +63,9 @@ class FY5400IO:
 
     def __init__(self, board_idx: int = 0):
         """
-        打开设备，初始化缓存
-        :param board_idx: 板卡编号，默认0
+        FUNC: 打开设备，初始化缓存
+        I:param board_idx: 板卡编号，默认0
+        O:无
         """
         self.hDev = dll.FY5400_OpenDevice(board_idx)
         if not self.hDev:
@@ -88,8 +84,9 @@ class FY5400IO:
     # ---------------- 对外接口 ----------------
     def start(self, interval: float = 0.01):
         """
-        启动后台读线程，循环采样DI
-        :param interval: 采样周期，秒
+        FUNC:启动后台读线程，循环采样DI
+        I:param interval: 采样周期，秒
+        O:无
         """
         if self._running.is_set():
             return
@@ -110,16 +107,18 @@ class FY5400IO:
 
     def get_di(self) -> int:
         """
-        线程安全读取最近一次DI值
-        :return: 16位DI数据
+        FUNC:线程安全读取最近一次DI值
+        I:无
+        O: 16位DI数据
         """
         with self._lock:
-            return hex(self._di_cache)
+            return hex(self._di_cache)#返回16进制数
 
     def set_do(self, value: int):
         """
-        线程安全写入16位DO
-        :param value: 0~0xFFFF
+        FUNC:线程安全写入16位DO
+        I:param value: 0~0xFFFF,十六进制数
+        O:无
         """
         value &= 0xFFFF
         with self._lock:
@@ -135,8 +134,9 @@ class FY5400IO:
     # ---------------- 内部实现 ----------------
     def _worker(self, interval: float):
         """
-        后台线程函数：循环读DI
-        :param interval: 采样周期，秒
+        FUNC:后台线程函数：循环读DI
+        I:param interval: 采样周期，秒
+        O:无
         """
         while self._running.is_set():
             di = dll.FY5400_DI(self.hDev)      # 读硬件
