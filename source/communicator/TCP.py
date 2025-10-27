@@ -7,7 +7,16 @@ from typing import Callable, Optional
 
 
 class ClassifierReceiver:
-
+    """
+    现有
+    此类用于接受来自其它tcp客户端的数据，数据格式为640*(float),numpy
+    要求启动线程，与结束线程的接口，获取数据的方法
+    此类接收一个回调函数，当接受到数据后触发
+    
+    要求
+    让其专注于通信，也即每一帧回调后仅作统计，并更新统计后的数据，
+    提供一个方法用于获取当前帧的统计结果，数据类型要求为整数列表
+    """
     def __init__(self, on_transform_data: Optional[Callable[[np.ndarray], None]] = None):
         # DLL 路径，需替换为你实际的 DLL 所在路径
         self.dll_path = r'Lib\ClassifyResultReceiver.dll'
