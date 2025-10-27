@@ -3,7 +3,17 @@ from threading import Thread
 import time
 
 class ThreadedCamera:
+    """
+    相机类，提供相机线程用于抓取图片和设置相机参数
+    提供线程启停接口和拷贝图片的函数。
+    拷贝图片格式为BGR
+    """
     def __init__(self, source=0):
+        """
+        I: source - 相机设备索引/视频路径（默认0表示默认摄像头）
+        O: 无
+        FUNC: 初始化相机实例，设置基础参数和状态变量
+        """
         # 相机相关变量
         self.cap = None
         self.camera_opened = False
@@ -19,7 +29,15 @@ class ThreadedCamera:
         self.contrast = 50
 
     def init_camera(self):
-        """初始化相机"""
+        """
+        I: 无显式输入（依赖类实例已初始化的source等参数）
+        O: 无显式输出（通过camera_opened状态标识初始化结果）
+        FUNC: 执行相机核心初始化流程：
+              1. 创建VideoCapture对象并验证是否成功打开
+              2. 标记相机已打开状态
+              3. 应用预设相机参数
+              4. 启动独立线程持续更新视频帧
+        """
         try:
             self.cap = cv2.VideoCapture(self.source, cv2.CAP_DSHOW)  # Windows使用DirectShow
             if not self.cap.isOpened():
@@ -38,7 +56,13 @@ class ThreadedCamera:
             self._running = False
 
     def set_camera(self):
-        """应用相机设置"""
+        """
+        I: 无显式输入（依赖类实例已设置的参数属性）
+        O: 无显式输出（通过cap.set()返回值隐式反馈设置结果）
+        FUNC: 将类内预设的相机参数应用到实际相机设备：
+              包括分辨率、帧率、曝光、亮度、对比度等基础参数，
+              额外关闭自动白平衡、自动对焦和增益以获得稳定画面
+        """
         if not self.camera_opened:
             return
 
@@ -64,7 +88,14 @@ class ThreadedCamera:
               f"亮度: {self.brightness}, 对比度: {self.contrast}")
 
     def update(self):
-        """更新视频帧"""
+        """
+        I: 无显式输入（依赖_running标志和camera_opened状态）
+        O: 无显式输出（通过修改current_frame更新最新帧）
+        FUNC: 线程主循环函数，持续执行以下操作：
+              1. 检查相机连接状态，异常时尝试重新初始化
+              2. 读取最新视频帧并缓存到current_frame
+              3. 处理读取失败情况（释放资源并尝试重连）
+        """
         while self._running:
             if self.cap is None or not self.camera_opened:
                 try:
@@ -88,14 +119,27 @@ class ThreadedCamera:
                 time.sleep(0.1)
 
     def grab_frame(self):
-        """获取当前帧（线程安全）返回图像格式为BGR"""
-
+        """
+        I: 无显式输入
+        O: current_frame的深拷贝（BGR格式）或None（无有效帧时）
+        FUNC: 线程安全地获取当前最新视频帧：
+              通过返回拷贝避免多线程下的数据竞争问题，
+              保证外部使用帧数据时不影响内部帧更新
+        """
         if self.current_frame is not None:
             return self.current_frame.copy()
         return None
 
     def close_cam(self):
-        """关闭并释放资源"""
+        """
+        I: 无显式输入
+        O: 无显式输出（通过释放资源和修改状态标记完成关闭）
+        FUNC: 安全关闭相机并释放所有相关资源：
+              1. 设置_running标志终止更新线程
+              2. 等待线程安全退出（join）
+              3. 释放VideoCapture对象
+              4. 重置相机状态标记
+        """
         self._running = False
         if hasattr(self, 'thread') and self.thread.is_alive():
             self.thread.join(timeout=1.0) 
@@ -106,7 +150,13 @@ class ThreadedCamera:
 
 
     def open_cam(self):
-        """打开相机"""
+        """
+        I: 无显式输入
+        O: 无显式输出（通过修改camera_opened状态标记反馈结果）
+        FUNC: 尝试重新打开相机设备：
+              仅在cap对象未初始化或已释放时调用，
+              成功打开后标记camera_opened为True
+        """
         if self.cap is None:
             print("尝试打开相机...")
             self.cap = cv2.VideoCapture(self.source, cv2.CAP_DSHOW)
@@ -116,7 +166,13 @@ class ThreadedCamera:
 
 
     def list_camera_properties(self):
-        """列出摄像头支持的属性（调试用）"""
+        """
+        I: 无显式输入（依赖已打开的cap对象）
+        O: 无显式输出（直接打印相机支持的属性列表）
+        FUNC: 调试辅助函数，遍历常见相机属性并打印其当前值：
+              帮助开发者了解相机支持的可配置参数及其当前状态，
+              包含分辨率、帧率、曝光、白平衡等关键参数
+        """
         props = [
             ("CAP_PROP_POS_MSEC", cv2.CAP_PROP_POS_MSEC),
             ("CAP_PROP_POS_FRAMES", cv2.CAP_PROP_POS_FRAMES),
@@ -147,14 +203,15 @@ class ThreadedCamera:
             # ("CAP_PROP_WHITE_BALANCE_BLUE_V", cv2.CAP_PROP_WHITE_BALANCE_BLUE_V),
         ]
 
-        print("\n--- 开始列出摄像头支持的属性 ---")
+        print("--- 开始列出摄像头支持的属性 ---")
         for name, prop_id in props:
             try:
                 value = self.cap.get(prop_id)
                 print(f"{name:30} (ID:{prop_id}): {value}")
             except Exception as e:
                 print(f"{name:30} (ID:{prop_id}): 不支持或无法读取 ({e})")
-        print("--- 摄像头属性列表结束 ---\n")
+        print("--- 摄像头属性列表结束 ---")
+
 
 # 使用示例
 if __name__ == '__main__':
