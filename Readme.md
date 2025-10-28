@@ -17,9 +17,8 @@
 ## 二、项目结构规范
 ### 2.1 整体目录结构
 SCSS2-Smart-Clothing-Sort-System-V2/  
-├── 后端/                  # 后端服务（Python + FastAPI）  
+├── 后端/                  # 后端服务（Python）  
 │   ├── 通信层/             # 硬件通信模块  
-│   │   ├── interfaces/     # 通信接口定义（abc_communication.py）  
 │   │   ├── tcp/            # TCP通信实现（asyncio + socket）  
 │   │   ├── serial_camera/  # 串口相机实现（pyserial）  
 │   │   └── pcie_io/        # PCIE IO板卡（pyvisa，保留参考）  
@@ -39,12 +38,7 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 │   ├── config/             # 配置文件  
 │   │   ├── __init__.py     # 配置初始化  
 │   │   ├── settings.py     # 主配置（通信参数、模式开关）  
-│   │   └── types.py        # 配置类型定义（Pydantic 模型）  
-│   │  
-│   ├── app.py              # FastAPI 入口（初始化路由、中间件）  
-│   └── tests/              # 后端测试  
-│       ├── test_communication.py  # 通信层测试  
-│       └── test_logic.py          # 逻辑层算法测试  
+│   │   └── types.py        # 配置类型定义（Pydantic 模型）   
 │  
 ├── 前端/                  # 桌面端 GUI（Python + PyQt5）  
 │   ├── main.py             # 应用入口（启动 PyQt 主窗口）  
@@ -58,11 +52,7 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 │   │   ├── icons/          # 图标（.ico/.png）  
 │   │   └── styles/         # 样式表（.qss）  
 │   └── services/           # 后端 API 服务（requests 调用）  
-│       └── api_client.py   # 封装 FastAPI 接口调用  
-│
-├── docs/                   # 项目总文档  
-│   ├── API.md              # 后端 FastAPI 接口文档（Swagger UI）  
-│   └── HardwareGuide.md    # 硬件连接指南（串口/TCP/PCIE）  
+│       └── api_client.py   
 │  
 ├── .gitignore              # Git 忽略配置（Python + PyQt）  
 ├── requirements.txt        # Python 依赖（后端 + 前端）  
@@ -70,21 +60,6 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 ## 三、核心模块说明（Python + PyQt 适配）
 ### 3.1 后端（Python + FastAPI）
 #### 3.1.1 通信层
-​​接口定义​​：用 abc_communication.py定义抽象基类（ABC），强制实现 connect/send/receive方法：  
-from abc import ABC, abstractmethod  
-from typing import Optional  
-
-class ICommunication(ABC):  
-    @abstractmethod  
-    async def connect(self, config: dict) -> None: ...  
-    @abstractmethod  
-    async def send(self, data: bytes) -> None: ...  
-    @abstractmethod  
-    async def receive(self) -> Optional[bytes]: ...  
-    @abstractmethod  
-    async def close(self) -> None: ...  
-​​TCP 实现​​：用 asyncio+ socket实现异步 TCP 通信，适配工业相机或 IO 板卡；  
-​​串口实现​​：用 pyserial库实现串口相机的数据读取。  
 #### 3.1.2 逻辑层
 ​​接口定义​​：用 abc_model_processor.py定义算法处理接口：  
 from abc import ABC, abstractmethod  
