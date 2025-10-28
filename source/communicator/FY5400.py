@@ -116,7 +116,8 @@ class FY5400IO:
         value &= 0xFFFF
         with self._lock:
             if value != self._do_cache:          # 减少无意义写
-                dll.FY5400_DO(self.hDev, int(value,16))  # 真正写硬件,写入十进制int
+                dll.FY5400_DO(self.hDev, value) 
+                print(value) # 真正写硬件,写入十进制int
                 self._do_cache = value           # 更新缓存
 
     def close(self):
@@ -141,13 +142,18 @@ class FY5400IO:
 # ---------------- 简单测试 ----------------
 if __name__ == "__main__":
     io = FY5400IO()          # 打开板卡
-    io.start(interval=0.01)  # 10ms采样
 
     try:
-        for i in range(1):  # 跑1秒
-            di = io.get_di()
-            print(f"DI=0x{di:04X}  {di:016b}")
-            time.sleep(0.1)
+        # for i in range(1):  # 跑1秒
+        #     di = io.get_di()
+        #     print(f"DI=0x{di:04X}  {di:016b}")
+        #     time.sleep(0.1)
+        io.set_do(0x0000)
+        time.sleep(3)
+        while True:
+            io.set_do(0x0001)
+            time.sleep(1)
+            io.set_do(0xFFFF)
     finally:
         io.set_do(0)  # 输出清零
         io.close()    # 释放设备
