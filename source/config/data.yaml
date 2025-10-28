@@ -1,0 +1,14 @@
+train: C:/Users/14676/Desktop/yolo/train/train/images
+val: C:/Users/14676/Desktop/yolo/train/valid/images
+test: C:/Users/14676/Desktop/yolo/train/test/images
+
+
+nc: 3
+names: ['toy','shoe',bag]
+
+roboflow:
+  workspace: test-o435s
+  project: shoes-ntjz4-dq5rw
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/test-o435s/shoes-ntjz4-dq5rw/dataset/1
