@@ -1,5 +1,17 @@
-import clip
+import cv2
+import numpy as np
 import configparser
+import json
+import sys
+import clip
+from PIL import Image
+from typing import List, Tuple, Optional,Dict
+
+MY_TEXT_LABELS = [
+        "T-shirt", "black clothing", "winter clothing", "summer clothing",
+        "plush toy", "down jacket", "wallet", "sweater", "leggings",
+        "underwear", "shoe", "dress"
+    ]
 
 class CaseSensitiveConfigParser(configparser.ConfigParser):
     """继承ConfigParser，覆盖optionxform方法以保持选项名原样"""
@@ -22,7 +34,52 @@ def load_clip_label_mapping(config_path=r'config\config.ini'):
     print("[INFO] 已加载 CLIP 标签与 ID 映射：")
     return clip_label_to_id
 
-    classifier = clip.ImageClassifier(
+classifier = clip.ImageClassifier(
     model_name='ViT-SO400M-16-SigLIP2-512',
     pretrained='webli',
     text_labels=MY_TEXT_LABELS)
+
+def match_clip(frame: np.ndarray,
+               classifier,
+               label_mapping: Optional[Dict[str, int]] = None) -> Tuple[np.ndarray, str, float, int]:
+    """
+    单张 BGR 图 -> CLIP 分类结果
+    :param frame:        BGR 图
+    :param classifier:   你自己的 ClipClassifier 实例
+    :param label_mapping:外部可复用缓存，传 None 则内部自动加载
+    :return:
+        vis      : RGB 图
+        label    : 最佳标签
+        conf     : 置信度
+        label_id : 对应 ID
+    """
+    if label_mapping is None:
+        label_mapping = load_clip_label_mapping()
+
+    vis = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    pil_image = Image.fromarray(vis)
+
+    label, conf = classifier.predict(pil_image)   # 返回 (str, float)
+    label_id = label_mapping.get(label, -1)       # 找不到给 -1
+    return vis, label, conf, label_id
+
+
+if __name__ == "__main__":
+    import sys
+
+    img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
+    frame = cv2.imread(img_path)
+    if frame is None:
+        print("图片没读进来，请检查路径或文件是否损坏")
+        sys.exit()
+
+    print("图片尺寸:", frame.shape[:2])
+
+    vis, label, conf, label_id = match_clip(frame, classifier)
+    print(f"CLIP 预测 -> label={label}  conf={conf:.3f}  id={label_id}")
+
+    cv2.namedWindow("clip_result", cv2.WINDOW_NORMAL)
+    cv2.imshow("clip_result", cv2.cvtColor(vis, cv2.COLOR_RGB2BGR))
+    print("按任意键关闭窗口...")
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
