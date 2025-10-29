@@ -5,8 +5,7 @@ from typing import Dict, List, Tuple, Optional
 import numpy as np
 
 # ========== 参数区 ==========
-INI_PATH = r"config\config.ini"          # 含 [HHIT_LABELS] 字段
-DEFAULT_LABELS = ["class_0", "class_1", "class_2", "class_3", "class_4"]  # 兜底
+INI_PATH = r'source\config\config.ini'          # 含 [HHIT_LABELS] 字段
 PASS_SIZE = 640 * 0.9                    # 与主程序保持一致
 
 # ========== 工具函数 ==========
@@ -70,7 +69,7 @@ def match_hhit(hhit_single_frame: List[int],
 # ====================== 单帧测试 =======================
 if __name__ == "__main__":
     # 模拟一帧数据（8 通道，末位为背景）
-    fake_frame = [10, 3, 0, 0, 0, 0, 0, 700]
+    fake_frame = [1, 3, 0, 0, 0, 0, 0,0,0]
     lid, lname = match_hhit(fake_frame)
     print("模拟帧:", fake_frame)
     print("预测结果 -> id:", lid, "name:", lname)

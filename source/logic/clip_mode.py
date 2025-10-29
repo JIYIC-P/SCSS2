@@ -18,7 +18,7 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
     def optionxform(self, optionstr: str) -> str:
         return optionstr  # 不将选项名转换为小写
     
-def load_clip_label_mapping(config_path=r'config\config.ini'):
+def load_clip_label_mapping(config_path=r'source\config\config.ini'):
     cfg = CaseSensitiveConfigParser()
     cfg.read(config_path, encoding='utf-8')
     if 'CLIP_LABELS' not in cfg:
@@ -67,7 +67,7 @@ def match_clip(frame: np.ndarray,
 if __name__ == "__main__":
     import sys
 
-    img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
+    img_path = r"C:\Users\14676\Desktop\new_env\shoe\imgs\2025-10-16-13-43-33.png"
     frame = cv2.imread(img_path)
     if frame is None:
         print("图片没读进来，请检查路径或文件是否损坏")

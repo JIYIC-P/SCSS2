@@ -79,7 +79,7 @@ def match_color(frame: np.ndarray,
 
 # ====================== 单张图片测试 =======================
 if __name__ == "__main__":
-    img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
+    img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-09-54.png"
     frame = cv2.imread(img_path)
     if frame is None:
         print("图片没读进来，请检查路径或文件是否损坏")
