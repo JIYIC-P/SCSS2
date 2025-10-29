@@ -3,73 +3,117 @@ import os
 import configparser
 from typing import Dict, List, Tuple, Optional
 import numpy as np
+import time
 
 # ========== 参数区 ==========
+
 INI_PATH = r'source\config\config.ini'          # 含 [HHIT_LABELS] 字段
 PASS_SIZE = 640 * 0.9                    # 与主程序保持一致
 
 # ========== 工具函数 ==========
 class CaseSensitiveConfigParser(configparser.ConfigParser):
     def optionxform(self, optionstr: str) -> str:
-        return optionstr  # 保持大小写
+        return optionstr
 
 
 def load_hhit_label(ini_path: str = INI_PATH) -> Dict[str, int]:
-    """
-    完全复用你提供的 load_HHIT_label 逻辑
-    """
     cfg = CaseSensitiveConfigParser()
     cfg.read(ini_path, encoding='utf-8')
     if 'HHIT_LABELS' not in cfg:
-        print("[警告] 未找到 [HHIT_LABELS] 配置，无法加载 HHIT 标签与ID映射")
-        return {}
-    HHIT_section = cfg['HHIT_LABELS']
-    HHIT_label_to_id = {}
-    for label_text, id_str in HHIT_section.items():
+        print("[警告] 未找到 [HHIT_LABELS] 配置，使用默认 7 类映射")
+        return 0
+    section = cfg['HHIT_LABELS']
+    mapping = {}
+    for lbl, id_str in section.items():
         try:
-            HHIT_label_to_id[label_text] = int(id_str.strip())  # 保持原大小写
+            mapping[lbl] = int(id_str.strip())
         except ValueError:
-            print(f"[警告] HHIT 标签 '{label_text}' 的 ID 不是有效数字: {id_str}")
-    print("[INFO] 已加载 HHIT 标签与 ID 映射：")
-    return HHIT_label_to_id
+            print(f"[警告] HHIT 标签 '{lbl}' 的 ID 不是有效数字: {id_str}")
+    # print("[INFO] 已加载 HHIT 标签与 ID 映射：", mapping)
+    return mapping
 
 
-# ========== 对外接口：单帧 HHIT 分类 ==========
+# ========== 多帧累积逻辑 ==========
+_accum_buffer: List[List[int]] = []      # 累积队列
+_in_session = False                      # 是否处于有效序列中
+
+
+def _reset():
+    """清空缓存与状态"""
+    global _accum_buffer, _in_session
+    _accum_buffer.clear()
+    _in_session = False
+
+
 def match_hhit(hhit_single_frame: List[int],
                label_mapping: Optional[Dict[str, int]] = None) -> Tuple[Optional[int], str]:
     """
-    :param hhit_single_frame: 一帧 8 通道计数列表（末位为背景）
+    逐帧喂数据，内部自动完成“开始-累积-结束-返回”全流程。
     :param label_mapping:     外部可复用缓存，传 None 则内部自动加载
-    :return: (label_id, label_name)  无有效目标返回 (None, "")
+    :return: (label_id, label_name)
+             仅在“序列结束”时返回有效结果，其余时刻返回 (None, "")
     """
+    global _accum_buffer, _in_session
+
     if label_mapping is None:
         label_mapping = load_hhit_label()
 
-    last = len(hhit_single_frame)
-    if last == 0:
+    is_all_zero = np.all(np.array(hhit_single_frame) == 0)
+
+    # 阶段 1：等待开始
+    if not _in_session:
+        if is_all_zero:
+            return None, ""
+        else:
+            _in_session = True
+            _accum_buffer.append(hhit_single_frame)
+            return None, ""
+
+    # 阶段 2：累积中
+    if not is_all_zero:
+        _accum_buffer.append(hhit_single_frame)
         return None, ""
 
-    # 1. 背景判断
-    if hhit_single_frame[-1] > PASS_SIZE:
+    # 阶段 3：遇到全零 → 结束并给出结果
+    if not _accum_buffer:
+        _reset()
         return None, ""
 
-    # 2. 前景找最大
-    temp = hhit_single_frame[:-1]
+    # 对位相加
+    summed = np.sum(np.array(_accum_buffer), axis=0).tolist()
+
+    # 背景判断（倒数第二通道）
+    if summed[-2] > PASS_SIZE:
+        _reset()
+        return None, ""
+
+    # 前景找最大
+    temp = summed[:7]
     max_val = max(temp)
     if max_val == 0:
+        _reset()
         return None, ""
 
-    first_max_index = int(np.argmax(temp))          # 0-based
-    # 按映射表顺序取对应标签
+    first_max_index = int(np.argmax(temp))
     label_name = list(label_mapping.keys())[first_max_index]
     label_id = label_mapping[label_name]
+
+    _reset()          # 清空等待下一次
     return label_id, label_name
 
 
-# ====================== 单帧测试 =======================
+# ====================== 简易测试 =======================
 if __name__ == "__main__":
-    # 模拟一帧数据（8 通道，末位为背景）
-    fake_frame = [1, 3, 0, 0, 0, 0, 0,0,0]
-    lid, lname = match_hhit(fake_frame)
-    print("模拟帧:", fake_frame)
-    print("预测结果 -> id:", lid, "name:", lname)
+
+    seq = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],   # 无效
+        [3, 0, 0, 0, 0, 0, 0, 0, 0],  # 开始
+        [2, 0, 0, 0, 0, 0, 0, 0, 0],  # 累积
+        [0, 0, 12, 0, 0, 0, 0, 0, 0], 
+        [0, 0, 0, 0, 0, 0, 0, 0, 0]  # 结束
+    ]
+    for frm in seq:
+        time.sleep(0.1)
+        lid, lname = match_hhit(frm)
+        if lid is not None:
+            print("序列结束 -> id:", lid, "name:", lname)
