@@ -9,6 +9,7 @@ import time
 
 INI_PATH = r'source\config\config.ini'          # 含 [HHIT_LABELS] 字段
 PASS_SIZE = 640 * 0.9                    # 与主程序保持一致
+ZERO_RATIO_THRESHOLD = 0.9        # 20 % 以上为零视为“空帧”
 
 # ========== 工具函数 ==========
 class CaseSensitiveConfigParser(configparser.ConfigParser):
@@ -33,22 +34,32 @@ def load_hhit_label(ini_path: str = INI_PATH) -> Dict[str, int]:
     return mapping
 
 
-# ========== 多帧累积逻辑 ==========
-_accum_buffer: List[List[int]] = []      # 累积队列
-_in_session = False                      # 是否处于有效序列中
+# --------- 空帧判定 ---------
+def _is_empty_frame(frame: List[int]) -> bool:
+    """零占比 ≥ 阈值（90%）视为空帧"""
+    zero_cnt = sum(1 for v in frame if v == 0)
+    return (zero_cnt / len(frame)) >= ZERO_RATIO_THRESHOLD
+
+
+# --------- 多帧累积状态 ---------
+_accum_buffer: List[List[int]] = []
+_in_session = False
 
 
 def _reset():
-    """清空缓存与状态"""
     global _accum_buffer, _in_session
     _accum_buffer.clear()
     _in_session = False
 
 
+# ========== 对外接口：逐帧喂数据 ==========
 def match_hhit(hhit_single_frame: List[int],
                label_mapping: Optional[Dict[str, int]] = None) -> Tuple[Optional[int], str]:
     """
     逐帧喂数据，内部自动完成“开始-累积-结束-返回”全流程。
+    开始/结束条件：零占比 ≥ 20 %
+    :param hhit_single_frame: 9 通道计数列表
+
     :param label_mapping:     外部可复用缓存，传 None 则内部自动加载
     :return: (label_id, label_name)
              仅在“序列结束”时返回有效结果，其余时刻返回 (None, "")
@@ -58,11 +69,20 @@ def match_hhit(hhit_single_frame: List[int],
     if label_mapping is None:
         label_mapping = load_hhit_label()
 
+
     is_all_zero = np.all(np.array(hhit_single_frame) == 0)
+
+    if len(hhit_single_frame) != 9:
+        print(f"[WARN] 输入帧长度不是 9，当前长度：{len(hhit_single_frame)}")
+        _reset()
+        return None, ""
+
+    empty_flag = _is_empty_frame(hhit_single_frame)
+
 
     # 阶段 1：等待开始
     if not _in_session:
-        if is_all_zero:
+        if empty_flag:
             return None, ""
         else:
             _in_session = True
@@ -70,16 +90,15 @@ def match_hhit(hhit_single_frame: List[int],
             return None, ""
 
     # 阶段 2：累积中
-    if not is_all_zero:
+    if not empty_flag:
         _accum_buffer.append(hhit_single_frame)
         return None, ""
 
-    # 阶段 3：遇到全零 → 结束并给出结果
+    # 阶段 3：遇到空帧 → 结束并给出结果
     if not _accum_buffer:
         _reset()
         return None, ""
 
-    # 对位相加
     summed = np.sum(np.array(_accum_buffer), axis=0).tolist()
 
     # 背景判断（倒数第二通道）
@@ -87,7 +106,6 @@ def match_hhit(hhit_single_frame: List[int],
         _reset()
         return None, ""
 
-    # 前景找最大
     temp = summed[:7]
     max_val = max(temp)
     if max_val == 0:
@@ -98,22 +116,61 @@ def match_hhit(hhit_single_frame: List[int],
     label_name = list(label_mapping.keys())[first_max_index]
     label_id = label_mapping[label_name]
 
-    _reset()          # 清空等待下一次
+    _reset()
     return label_id, label_name
 
 
-# ====================== 简易测试 =======================
+# ====================== 循环多组自测 =======================
 if __name__ == "__main__":
 
-    seq = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],   # 无效
-        [3, 0, 0, 0, 0, 0, 0, 0, 0],  # 开始
-        [2, 0, 0, 0, 0, 0, 0, 0, 0],  # 累积
-        [0, 0, 12, 0, 0, 0, 0, 0, 0], 
-        [0, 0, 0, 0, 0, 0, 0, 0, 0]  # 结束
+    # 测试库：每组是一条完整序列（List[List[int]]）
+    test_bank = [
+        # 序列 1：class_2 应该赢
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 5, 4, 0, 2, 0, 0, 0],
+            [0, 0, 8, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ],
+        # 序列 2：class_0 赢（含少量噪声）
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [4, 1, 2, 0, 0, 0, 0, 0, 0],
+            [6, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ],
+        # 序列 3：背景通道过大 → 应返回 None
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 5, 0, 0, 0, 0],  # 背景超限
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ],
+        # 序列 4：全零序列 → 应返回 None
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ],
+        # 序列 5：class_6 赢（末类）
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 7, 0, 0],
+            [0, 0, 0, 0, 0, 0, 9, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ],
     ]
-    for frm in seq:
-        time.sleep(0.1)
-        lid, lname = match_hhit(frm)
-        if lid is not None:
-            print("序列结束 -> id:", lid, "name:", lname)
+
+    mapping = load_hhit_label()
+    print("标签映射:", mapping)
+    print("=" * 50)
+
+    rounds = 3                               # 想跑多少轮
+    for r in range(rounds):
+        print(f"========== 第 {r+1} 轮 ==========")
+        for idx, seq in enumerate(test_bank, 1):
+            print(f"\n--- 序列 {idx} ---")
+            for frm in seq:
+                lid, lname = match_hhit(frm, mapping)
+               
+            print(f"id={lid}  name={lname}")
+            print("-" * 30)
+
