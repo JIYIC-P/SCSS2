@@ -21,9 +21,10 @@ class updater():
     """
     def __init__(self):
         """
-        初始化传入相机/hhit/pcie/三个对象，
+        初始化传入通信管理对象，其模式与此类模式应统一
         update（）函数执行时只检测对象的数据（可以是信号量）是否准备完毕，不参与对象管理
         """
+
         self.camera_init()
 
     def cut_img(self,frame,x,width,y,height):
