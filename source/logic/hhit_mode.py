@@ -4,24 +4,57 @@ import configparser
 from typing import Dict, List, Tuple, Optional
 import numpy as np
 import time
+from communicator.TCP import ClassifierReceiver 
+
 
 # ========== 参数区 ==========
 
 INI_PATH = r'source\config\config.ini'          # 含 [HHIT_LABELS] 字段
-PASS_SIZE = 640 * 0.9                    # 与主程序保持一致
-ZERO_RATIO_THRESHOLD = 0.9        # 20 % 以上为零视为“空帧”
+PASS_SIZE = 640                     # 与主程序保持一致
+ZERO_RATIO_THRESHOLD = 0.9        # 90 % 以上为零视为“空帧”
 
 # ========== 工具函数 ==========
 class CaseSensitiveConfigParser(configparser.ConfigParser):
-    def optionxform(self, optionstr: str) -> str:
+    def optionxform( optionstr: str) -> str:
         return optionstr
 
+def statistics_data(float_array: np.ndarray):
+    """
+    优化后的统计数据函数：解决浮点转整数错误，保持高频率性能
+    - 输入：float_array 是 np.ndarray，元素为浮点数（如传感器输出的计数，理论应为整数但含噪声）
+    - 功能：统计0-5的值的次数（对应minlength=6）
+    """
+    try:
+        # 1. 范围裁剪：将浮点数限制在[0,5]，避免负数或过大值
+        # 注：若原始数据本应在0-5之间，此步过滤噪声/异常值
+        clipped_float = np.clip(float_array, a_min=0.0, a_max=7.0)
+        
+        # 2. 准确转整数：用np.round替代astype(int)，避免截断误差
+        # 注：np.uint8是最小的无符号整数类型，节省内存且速度快
+        int_array = np.round(clipped_float).astype(np.uint8)
+        
+        # 3. 快速统计：np.bincount向量化操作，minlength=6确保输出长度为6
+        counts = np.bincount(int_array, minlength=6)
+        
+        # 后续处理（保持原逻辑）
+        HHIT_single_frame = counts.tolist()  
+        # count += 1
+        # if count == 10:
+        #     count = 0
+        #     print("近10次统计结果：", HHIT_single_frame)
+            
+    except Exception as e:
+        # 异常捕获：避免单次错误导致整个回调崩溃
+        print(f"统计数据出错（数组形状：{float_array.shape}）：{str(e)}")
+        # 可选：记录日志或返回默认值
+
+receiver = ClassifierReceiver(on_transform_data=statistics_data)
 
 def load_hhit_label(ini_path: str = INI_PATH) -> Dict[str, int]:
     cfg = CaseSensitiveConfigParser()
     cfg.read(ini_path, encoding='utf-8')
     if 'HHIT_LABELS' not in cfg:
-        print("[警告] 未找到 [HHIT_LABELS] 配置，使用默认 7 类映射")
+        print("[警告] 未找到 [HHIT_LABELS] 配置")
         return 0
     section = cfg['HHIT_LABELS']
     mapping = {}

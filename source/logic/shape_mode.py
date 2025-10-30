@@ -28,7 +28,7 @@ def match_shape(frame, model_path: str = r"source\config\best_epoch400_mAP50-0.8
             #print(f"检测到: {class_name}, 可信度: {confidence:.2f}, 位置: {x1:.0f}, {y1:.0f}, {x2:.0f}, {y2:.0f}")                  
             # 可以在这里做进一步处理，比如筛选高置信度的目标
     frame = img_yolo[0].plot()  
-    return  frame,[class_id,confidence]
+    return  frame,class_id,confidence
 
 
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         sys.exit()
 
     print("图片尺寸:", frame.shape[:2])
-    vis, (cls, conf) = match_shape(frame)
+    vis, cls, conf = match_shape(frame)
     print(f"检测结果 -> class_id={cls}, confidence={conf:.3f}")
 
     cv2.namedWindow("result", cv2.WINDOW_NORMAL)  # 确保窗口在前台

@@ -1,40 +1,29 @@
-# #基于python3.6版本
-# #北京飞扬助力电子技术有限公司 www.fyying.com
-# #----------------------
+#基于python3.6版本
+#北京飞扬助力电子技术有限公司 www.fyying.com
+#----------------------
 
 # from ctypes import *#引入ctypes库
 # import time#使用延时函数
+# def test():
+#     #下面两种调用DLL函数的方式都可以
+#     #dll=WinDLL("C:\Windows\System32\FY5400.dll")
+#     dll=windll.LoadLibrary(r"source\Lib\FY5400.dll")
 
-# #下面两种调用DLL函数的方式都可以
-# #dll=WinDLL("C:\Windows\System32\FY5400.dll")
-# dll=windll.LoadLibrary(r"source\Lib\FY5400.dll")
+#     hDev=dll.FY5400_OpenDevice(0)#获得句柄
+#     print("句柄值是" + str(hDev))
+#     print("程序开始运行")
 
-# hDev=dll.FY5400_OpenDevice(0)#获得句柄
-# print("句柄值是" + str(hDev))
-# print("程序开始运行")
+#     t = 0.01
+#     count=0
+#     while(count<1000):#循环1000次
+
+#         dll.FY5400_DO(hDev,0xffff)#输出通道全部置高
+#         time.sleep(t)
+#         print(t)
+#         dll.FY5400_DO(hDev,0x0000)#输出通道全部置低
+#         time.sleep(t)
 
 
-# count=0
-# while(count<1000):#循环1000次
-	
-# 	t1 = time.time()
-# 	#dll.FY5400_DO(hDev,0)#输出通道全部置低
-# 	#dll.FY5400_DO(hDev,65535)#输出通道全部置高
-
-	
-# 	didata=dll.FY5400_DI(hDev)#获得所有输入通道的状态
-# 	print("didata is " + str(didata))
-	
-# 	#dll.FY5400_EEPROM_WR(hDev,0,3)#地址0写入数据3 这个数据可以任意修改 范围0--255
-# 	#eedata=dll.FY5400_EEPROM_RD(hDev,0)#读取地址0的数据
-# 	#print("eeprom data is " + str(eedata))#显示数据
-# 	print(time.time()-t1)
-# 	count=count+1
-# #说明：函数的意义以及参数请参考手册，需要技术支持，请联系15911028547
-
-# Python3.6
-# 北京飞扬助力电子技术有限公司  www.fyying.com
-# 2025-10
 
 import time
 import threading
@@ -142,18 +131,20 @@ class FY5400IO:
 # ---------------- 简单测试 ----------------
 if __name__ == "__main__":
     io = FY5400IO()          # 打开板卡
-
+    io.set_do(0x0000)
     try:
         # for i in range(1):  # 跑1秒
         #     di = io.get_di()
         #     print(f"DI=0x{di:04X}  {di:016b}")
         #     time.sleep(0.1)
-        io.set_do(0x0000)
+
         time.sleep(3)
         while True:
             io.set_do(0x0001)
-            time.sleep(1)
-            io.set_do(0xFFFF)
+            time.sleep(0.5)
+            io.set_do(0x8000)
+            time.sleep(0.5)
+
     finally:
         io.set_do(0)  # 输出清零
         io.close()    # 释放设备
