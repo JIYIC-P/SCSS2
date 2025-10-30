@@ -20,16 +20,12 @@ class updater():
     缓存图片，识别结果等信息，供前端显示调用
     """
     def __init__(self):
+        """
+        初始化传入相机/hhit/pcie/三个对象，
+        update（）函数执行时只检测对象的数据（可以是信号量）是否准备完毕，不参与对象管理
+        """
         self.camera_init()
 
-    def camera_init(self):
-        self.streamer = ThreadedCamera(0)
-        self.streamer.init_camera()
-        self.frame = None
-        
-    def pcie_init(self):
-        """初始化pcie通信，创建通信对象
-        """
     def cut_img(self,frame,x,width,y,height):
         '''裁剪图片'''
         # OpenCV 的裁剪操作是通过 NumPy 的数组切片实现的
@@ -37,6 +33,8 @@ class updater():
     
     def get_data(self):
         """
+
+        调用传入的对象的数据
         必做：
         
         1.获取传感器信息
@@ -95,6 +93,7 @@ class updater():
             frame_cut = self.cut_img(frame, 470, 1136, 0, 1080)
             return clip_mode.match_clip(frame_cut,clip_mode.classifier)
         if mode=='HHIT':
+            pass
             
 
             
