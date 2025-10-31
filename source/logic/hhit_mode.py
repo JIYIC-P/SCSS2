@@ -1,209 +1,121 @@
 # hhit_match.py
-import os
-import configparser
+import sys, pathlib, os, configparser, numpy as np
 from typing import Dict, List, Tuple, Optional
-import numpy as np
-import time
-from communicator.TCP import ClassifierReceiver 
 
+root = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root))
+from communicator.TCP import ClassifierReceiver          # 若无需 TCP 可注释
 
-# ========== 参数区 ==========
+INI_PATH = r'source\config\config.ini'
+VALID_RATIO = 0.80          # 80 % 通道有标签才算有效帧
 
-INI_PATH = r'source\config\config.ini'          # 含 [HHIT_LABELS] 字段
-PASS_SIZE = 640                     # 与主程序保持一致
-ZERO_RATIO_THRESHOLD = 0.9        # 90 % 以上为零视为“空帧”
-
-# ========== 工具函数 ==========
+# ---------- 读取标签 ----------
 class CaseSensitiveConfigParser(configparser.ConfigParser):
-    def optionxform( optionstr: str) -> str:
+    def optionxform(self, optionstr: str) -> str:
         return optionstr
 
-def statistics_data(float_array: np.ndarray):
-    """
-    优化后的统计数据函数：解决浮点转整数错误，保持高频率性能
-    - 输入：float_array 是 np.ndarray，元素为浮点数（如传感器输出的计数，理论应为整数但含噪声）
-    - 功能：统计0-5的值的次数（对应minlength=6）
-    """
-    try:
-        # 1. 范围裁剪：将浮点数限制在[0,5]，避免负数或过大值
-        # 注：若原始数据本应在0-5之间，此步过滤噪声/异常值
-        clipped_float = np.clip(float_array, a_min=0.0, a_max=7.0)
-        
-        # 2. 准确转整数：用np.round替代astype(int)，避免截断误差
-        # 注：np.uint8是最小的无符号整数类型，节省内存且速度快
-        int_array = np.round(clipped_float).astype(np.uint8)
-        
-        # 3. 快速统计：np.bincount向量化操作，minlength=6确保输出长度为6
-        counts = np.bincount(int_array, minlength=6)
-        
-        # 后续处理（保持原逻辑）
-        HHIT_single_frame = counts.tolist()  
-        # count += 1
-        # if count == 10:
-        #     count = 0
-        #     print("近10次统计结果：", HHIT_single_frame)
-            
-    except Exception as e:
-        # 异常捕获：避免单次错误导致整个回调崩溃
-        print(f"统计数据出错（数组形状：{float_array.shape}）：{str(e)}")
-        # 可选：记录日志或返回默认值
-
-receiver = ClassifierReceiver(on_transform_data=statistics_data)
-
-def load_hhit_label(ini_path: str = INI_PATH) -> Dict[str, int]:
+def load_HHIT_label(config_path: str = INI_PATH) -> Dict[str, int]:
     cfg = CaseSensitiveConfigParser()
-    cfg.read(ini_path, encoding='utf-8')
+    cfg.read(config_path, encoding='utf-8')
     if 'HHIT_LABELS' not in cfg:
-        print("[警告] 未找到 [HHIT_LABELS] 配置")
-        return 0
+        print("[警告] 未找到 [HHIT_LABELS] 配置，无法加载 HHIT 标签与ID映射")
+        return {}
     section = cfg['HHIT_LABELS']
-    mapping = {}
-    for lbl, id_str in section.items():
-        try:
-            mapping[lbl] = int(id_str.strip())
-        except ValueError:
-            print(f"[警告] HHIT 标签 '{lbl}' 的 ID 不是有效数字: {id_str}")
-    # print("[INFO] 已加载 HHIT 标签与 ID 映射：", mapping)
-    return mapping
+    return {label: int(v.strip()) for label, v in section.items()}
 
+# ---------- 统一的小数→整数 ----------
+def __float_to_int(arr: np.ndarray) -> np.ndarray:
+    """先 clip 再四舍五入，最后 uint8，保证 0-6"""
+    clipped = np.clip(arr, 0.0, 20.0)
+    return np.round(clipped).astype(np.uint8)
 
-# --------- 空帧判定 ---------
-def _is_empty_frame(frame: List[int]) -> bool:
-    """零占比 ≥ 阈值（90%）视为空帧"""
-    zero_cnt = sum(1 for v in frame if v == 0)
-    return (zero_cnt / len(frame)) >= ZERO_RATIO_THRESHOLD
+# ---------- 640→7 维统计 ----------
+def statistics_data(float_array: np.ndarray) -> List[int]:
+    try:
+        int_array = __float_to_int(float_array)
+        counts = np.bincount(int_array, minlength=7)
+        return counts.tolist()
+    except Exception as e:
+        print(f"统计数据出错（数组形状：{float_array.shape}）：{e}")
+        return [0] * 7
 
+# ---------- 空/有效帧判定 ----------
+def _is_valid_frame(arr640: np.ndarray, label_map: Dict[str, int]) -> bool:
+    int_arr = __float_to_int(arr640)
+    valid_mask = (int_arr >= 0) & (int_arr <= 6)
+    valid_vals = int_arr[valid_mask]
+    # print(valid_vals.size)
+    # 只要值在 0~6 就视为合法，无需再查表
+    ratio = valid_vals.size / 640.0
+    return ratio >= VALID_RATIO
 
-# --------- 多帧累积状态 ---------
-_accum_buffer: List[List[int]] = []
-_in_session = False
+# ---------- 累积状态 ----------
+_accum_buf: List[List[int]] = []
+_in_sess = False
+_label_map = load_HHIT_label()          # 全局复用
 
+def _reset() -> None:
+    global _accum_buf, _in_sess
+    _accum_buf.clear()
+    _in_sess = False
 
-def _reset():
-    global _accum_buffer, _in_session
-    _accum_buffer.clear()
-    _in_session = False
-
-
-# ========== 对外接口：逐帧喂数据 ==========
-def match_hhit(hhit_single_frame: List[int],
-               label_mapping: Optional[Dict[str, int]] = None) -> Tuple[Optional[int], str]:
+# ---------- 对外接口 ----------
+def match_hhit(arr640: np.ndarray) -> Tuple[Optional[int], str]:
     """
-    逐帧喂数据，内部自动完成“开始-累积-结束-返回”全流程。
-    开始/结束条件：零占比 ≥ 20 %
-    :param hhit_single_frame: 9 通道计数列表
-
-    :param label_mapping:     外部可复用缓存，传 None 则内部自动加载
-    :return: (label_id, label_name)
-             仅在“序列结束”时返回有效结果，其余时刻返回 (None, "")
+    主流程：640→有效判断→统计→累加→给标签
     """
-    global _accum_buffer, _in_session
+    global _accum_buf, _in_sess
 
-    if label_mapping is None:
-        label_mapping = load_hhit_label()
+    valid = _is_valid_frame(arr640, _label_map)
+    cnt7 = statistics_data(arr640) if valid else None
 
-
-    is_all_zero = np.all(np.array(hhit_single_frame) == 0)
-
-    if len(hhit_single_frame) != 9:
-        print(f"[WARN] 输入帧长度不是 9，当前长度：{len(hhit_single_frame)}")
-        _reset()
-        return None, ""
-
-    empty_flag = _is_empty_frame(hhit_single_frame)
-
-
-    # 阶段 1：等待开始
-    if not _in_session:
-        if empty_flag:
+    if not _in_sess:                      # 阶段1：等待开始
+        if not valid:
             return None, ""
-        else:
-            _in_session = True
-            _accum_buffer.append(hhit_single_frame)
-            return None, ""
-
-    # 阶段 2：累积中
-    if not empty_flag:
-        _accum_buffer.append(hhit_single_frame)
+        _in_sess = True
+        _accum_buf.append(cnt7)
         return None, ""
 
-    # 阶段 3：遇到空帧 → 结束并给出结果
-    if not _accum_buffer:
+    if valid:                             # 阶段2：累积中
+        _accum_buf.append(cnt7)
+        return None, ""
+
+    # 阶段3：遇到无效帧 → 结算
+    if not _accum_buf:
         _reset()
         return None, ""
 
-    summed = np.sum(np.array(_accum_buffer), axis=0).tolist()
-
-    # 背景判断（倒数第二通道）
-    if summed[-2] > PASS_SIZE:
-        _reset()
-        return None, ""
-
-    temp = summed[:7]
-    max_val = max(temp)
-    if max_val == 0:
-        _reset()
-        return None, ""
-
-    first_max_index = int(np.argmax(temp))
-    label_name = list(label_mapping.keys())[first_max_index]
-    label_id = label_mapping[label_name]
-
+    summed = np.sum(_accum_buf, axis=0, dtype=int)
+    max_idx = int(np.argmax(summed))
+    reverse_map = {v: k for k, v in _label_map.items()}
+    label_name = reverse_map.get(max_idx, '其它')
     _reset()
-    return label_id, label_name
+    return max_idx, label_name
 
-
-# ====================== 循环多组自测 =======================
+# ====================== 自测 =======================
 if __name__ == "__main__":
+    import random
 
-    # 测试库：每组是一条完整序列（List[List[int]]）
-    test_bank = [
-        # 序列 1：class_2 应该赢
-        [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [1, 0, 5, 4, 0, 2, 0, 0, 0],
-            [0, 0, 8, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ],
-        # 序列 2：class_0 赢（含少量噪声）
-        [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [4, 1, 2, 0, 0, 0, 0, 0, 0],
-            [6, 0, 1, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ],
-        # 序列 3：背景通道过大 → 应返回 None
-        [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [1, 0, 0, 0, 5, 0, 0, 0, 0],  # 背景超限
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ],
-        # 序列 4：全零序列 → 应返回 None
-        [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ],
-        # 序列 5：class_6 赢（末类）
-        [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 7, 0, 0],
-            [0, 0, 0, 0, 0, 0, 9, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ],
-    ]
+    def fake_640(empty: bool = False) -> np.ndarray:
+        if empty:
+            return np.full(640, 0, np.float32)
+        mask = np.random.rand(640) < 0.2
+        arr = np.where(mask, 2,
+                       np.random.randint(1, 20, size=640)) \
+              + np.random.rand(640) * 0.3
+        return arr.astype(np.float32)
 
-    mapping = load_hhit_label()
-    print("标签映射:", mapping)
-    print("=" * 50)
-
-    rounds = 3                               # 想跑多少轮
-    for r in range(rounds):
-        print(f"========== 第 {r+1} 轮 ==========")
-        for idx, seq in enumerate(test_bank, 1):
-            print(f"\n--- 序列 {idx} ---")
-            for frm in seq:
-                lid, lname = match_hhit(frm, mapping)
-               
-            print(f"id={lid}  name={lname}")
-            print("-" * 30)
-
+    def run_fake(seq_len: int = 30) -> None:
+        for _ in range(seq_len):
+            arr640 = fake_640(empty=(random.random() < 0.3))   # 调高无效帧概率
+            lid, lname = match_hhit(arr640)
+            print(lid, lname)
+        # 强制用空帧收尾
+        lid, lname = match_hhit(fake_640(empty=True))
+        if lid is not None:
+            print(f"[序列结束] id={lid}  name={lname}")
+    print("标签映射:", {v: k for k, v in _label_map.items()})
+    print("-" * 50)
+    for g in range(3):
+        print(f"\n========== 第 {g+1} 组 ==========")
+        run_fake()
