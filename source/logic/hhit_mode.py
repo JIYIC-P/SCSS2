@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, Optional
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from communicator.TCP import ClassifierReceiver          # 若无需 TCP 可注释
+from communicator.tcp import ClassifierReceiver          # 若无需 TCP 可注释
 
 INI_PATH = r'source\config\config.ini'
 VALID_RATIO = 0.80          # 80 % 通道有标签才算有效帧

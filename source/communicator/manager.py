@@ -4,11 +4,17 @@ import communicator.mbs as mbs
 import communicator.tcp as hhit
 
 class manager():
-    def __init__(self,mode):
-        self.mode = mode
+    
+    def __init__(self,mode = None):
         """
         传入模式，根据模式判断来创建和管理对象
         """
+        if mode is not None:
+            self.mode = mode
+            if mode == ""
+
+        
+
     def start(self):
         """
         判断哪个mode，哪个mode需要哪些通信方式

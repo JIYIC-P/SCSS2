@@ -9,6 +9,7 @@ import sys
 
 class updater():
     """
+    fix
     此类用于将四个模式的调用封装到一起，提供一个update函数，此函数用于更新
 
     1 . update（）循环

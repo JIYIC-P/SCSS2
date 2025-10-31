@@ -6,5 +6,5 @@
 
 import Ui #PYQT界面
 import logic.logic_handler as UPDATE
-import communicator.
+#import communicator.
 
