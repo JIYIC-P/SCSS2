@@ -8,19 +8,69 @@ import cv2
 import sys
 
 class updater():
+    """
+    此类用于将四个模式的调用封装到一起，提供一个update函数，此函数用于更新
+
+    1 . update（）循环
+    2 . 获取数据（图片，传感器信息，numpy统计结果）
+    3 . 四个模式各自的处理方法。 返回物品ID有范围
+    4 . 根据id发出指令（根据传感器信息）
+
+
+    缓存图片，识别结果等信息，供前端显示调用
+    """
     def __init__(self):
+        """
+        初始化传入通信管理对象，其模式与此类模式应统一
+        update（）函数执行时只检测对象的数据（可以是信号量）是否准备完毕，不参与对象管理
+        """
+
         self.camera_init()
 
-    def camera_init(self):
-        self.streamer = ThreadedCamera(0)
-        self.streamer.init_camera()
-        self.frame = None
-        
     def cut_img(self,frame,x,width,y,height):
         '''裁剪图片'''
         # OpenCV 的裁剪操作是通过 NumPy 的数组切片实现的
         return frame[y:y + height, x:x + width]
     
+    def get_data(self):
+        """
+
+        调用传入的对象的数据
+        必做：
+        
+        1.获取传感器信息
+
+        选择：
+        2.获取图片（形状模式）
+        3.获取hhit统计结果
+        """
+    def setmode(self,mode):
+        self.mode = mode
+
+    def generate_order(self,ID,worker):
+        """
+        传入ID和工位信息
+        根据其内容生成并返回16进制指令
+        """
+        return 
+    
+    def send_order(self,order):
+        """
+        调用pcie通信对象，发送指令
+        """
+
+    def update(self):
+        """
+        2 . 获取数据（图片，传感器信息，numpy统计结果）
+        3 . 四个模式各自的处理方法。 返回物品ID有范围
+        4 . 根据id发出指令（根据传感器信息）
+
+        """
+        self.get_data()
+        ID = self.Judgment()
+        ORDER = self.generate_order(ID)
+        self.send_order(ORDER)
+
     def Judgment(self,mode):
         if mode=="形状":
             import shape_mode
@@ -44,6 +94,7 @@ class updater():
             frame_cut = self.cut_img(frame, 470, 1136, 0, 1080)
             return clip_mode.match_clip(frame_cut,clip_mode.classifier)
         if mode=='HHIT':
+            pass
             
 
             
@@ -73,14 +124,3 @@ if __name__ == "__main__":
     cv2.waitKey(0)                            # 阻塞直到按键
     cv2.destroyAllWindows()
     
-    """
-    此类用于将四个模式的调用封装到一起，提供一个update函数，此函数用于更新
-
-    1 . update（）循环
-    2 . 获取数据（图片，传感器信息，numpy统计结果）
-    3 . 四个模式各自的处理方法。 返回物品ID有范围
-    4 . 根据id发出指令（根据传感器信息）
-
-
-    缓存图片，识别结果等信息，供前端显示调用
-    """
