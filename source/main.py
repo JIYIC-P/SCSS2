@@ -1,8 +1,3 @@
-"""
-程序入口
-从此处打开后端（通信类和逻辑处理类）与前端（PYQT界面）
-
-"""
 import pathlib,sys
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))

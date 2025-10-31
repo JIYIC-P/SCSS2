@@ -2,13 +2,12 @@
 **版本**：v2.0  
 **作者**：熊雅文  
 **更新时间**：2024-05-20  
-**仓库地址**：[github.com/your-team/scss2](https://github.com/your-team/scss2)  
+**仓库地址**：https://github.com/JIYIC-P/SCSS2
 
 
 ## 一、项目概述
 ### 1.1 背景
-原 SCSS1 系统采用「Node.js 后端 + Vue 前端」，但​​桌面端部署复杂​​（需 Node.js 环境），且硬件通信库对 Windows 兼容性差。重构后采用 ​​Python 全栈​​：
-后端：Python + FastAPI（提供 RESTful API，适配硬件通信）；
+后端：Python
 前端：Python + PyQt（桌面端 GUI，直接调用后端 API，无需额外环境）。
 ### 1.2 重构核心目标
 ​​全栈 Python 化​​：解决桌面端部署痛点，兼容 Windows/Linux/macOS；
@@ -17,31 +16,28 @@
 ## 二、项目结构规范
 ### 2.1 整体目录结构
 SCSS2-Smart-Clothing-Sort-System-V2/  
-├── 后端/                  # 后端服务（Python）  
-│   ├── 通信层/             # 硬件通信模块  
+├── source/                  # 后端服务（Python）  
+│   ├── communicator/       # 硬件通信模块  
+│   │   ├── manager/        # 通信管理类
 │   │   ├── tcp/            # TCP通信实现（asyncio + socket）  
-│   │   ├── serial_camera/  # 串口相机实现（pyserial）  
+│   │   ├── camera/         # 串口相机实现（pyserial）  
+│   │   ├── modbus/         # 串口通信（弃用）  
 │   │   └── pcie_io/        # PCIE IO板卡（pyvisa，保留参考）  
 │   │  
-│   ├── 逻辑层/             # 核心算法模块  
-│   │   ├── interfaces/     # 处理接口定义（abc_model_processor.py）  
+│   ├── logic/             # 核心算法模块  
+│   │   ├── logic_handler/  # 处理接口定义（update()）  
 │   │   ├── color_mode/     # 颜色模式（OpenCV-Python 处理 HSV 均值）  
-│   │   ├── shape_mode/     # 形状模式  
-│   │   │   ├── yolo/       # YOLOv8 模型推理（ultralytics 库）  
-│   │   │   └── clip/       # CLIP 文本-图像匹配（sentence-transformers）  
-│   │   └── hyperspectral/  # 高光谱模式（numpy 统计特征）  
+│   │   ├── clip_mode/      # 形状模式  --clip  
+│   │   ├── yolo_mode/      # 形状模式  --yolo  
+│   │   └── hhit_mode/      # 高光谱模式（numpy 统计特征）  
 │   │  
-│   ├── utils/              # 通用工具  
-│   │   ├── image_utils.py  # 图像预处理（缩放、灰度化，OpenCV）  
-│   │   └── logger.py       # 日志封装（logging 模块）  
-│   │  
-│   ├── config/             # 配置文件  
-│   │   ├── __init__.py     # 配置初始化  
-│   │   ├── settings.py     # 主配置（通信参数、模式开关）  
-│   │   └── types.py        # 配置类型定义（Pydantic 模型）   
-│  
-├── 前端/                  # 桌面端 GUI（Python + PyQt5）  
-│   ├── main.py             # 应用入口（启动 PyQt 主窗口）  
+│   └── config/             # 配置文件  
+│       ├── data.yaml         # yolo配置文件（可以集成进config.ini）    
+│       ├── best.pt           # yolo权重文件    
+│       ├── config.ini        # 配置文件    
+│       └── cfgmanager.py     # 配置管理类    
+├──Lib/DLL
+├── Ui/                  # 桌面端 GUI（Python + PyQt5）  
 │   ├── windows/            # 窗口组件  
 │   │   └── main_window.py  # 主窗口（QMainWindow）  
 │   ├── widgets/            # 自定义控件  
@@ -53,7 +49,8 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 │   │   └── styles/         # 样式表（.qss）  
 │   └── services/           # 后端 API 服务（requests 调用）  
 │       └── api_client.py   
-│  
+├── main.py                 # 应用入口（启动 PyQt 主窗口）  
+│   
 ├── .gitignore              # Git 忽略配置（Python + PyQt）  
 ├── requirements.txt        # Python 依赖（后端 + 前端）  
 └── README.md               # 项目简介（部署、使用说明）  
