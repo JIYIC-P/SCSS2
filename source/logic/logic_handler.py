@@ -3,10 +3,8 @@ root = pathlib.Path(__file__).resolve().parent.parent      # 找到工程根
 sys.path.insert(0, str(root))  
 
 
-from communicator.camera import *
 import cv2
 import sys
-
 class updater():
     """
     fix
@@ -20,13 +18,12 @@ class updater():
 
     缓存图片，识别结果等信息，供前端显示调用
     """
-    def __init__(self):
+    def __init__(self,communicator):
         """
         初始化传入通信管理对象，其模式与此类模式应统一
         update（）函数执行时只检测对象的数据（可以是信号量）是否准备完毕，不参与对象管理
         """
-
-        self.camera_init()
+        self.com_model = communicator  
 
     def cut_img(self,frame,x,width,y,height):
         '''裁剪图片'''
@@ -45,6 +42,7 @@ class updater():
         2.获取图片（形状模式）
         3.获取hhit统计结果
         """
+        self.frame0 = self.com_model.camera0.grab_frame()
     def setmode(self,mode):
         self.mode = mode
 
@@ -73,6 +71,7 @@ class updater():
         self.send_order(ORDER)
 
     def Judgment(self,mode):
+        '''注意只返回ID，最后记得统一返回值类型和数量'''
         if mode=="形状":
             import shape_mode
             frame=self.streamer.grab_frame()
@@ -95,8 +94,9 @@ class updater():
             frame_cut = self.cut_img(frame, 470, 1136, 0, 1080)
             return clip_mode.match_clip(frame_cut,clip_mode.classifier)
         if mode=='HHIT':
-            pass
-            
+            import hhit_mode
+            return hhit_mode.match_hhit()
+  
 
             
 
