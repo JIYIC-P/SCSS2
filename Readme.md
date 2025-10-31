@@ -1,6 +1,6 @@
 # SCSS2 智能服装分拣系统 V2 技术文档  
 **版本**：v2.0  
-**作者**：智能硬件团队  
+**作者**：熊雅文  
 **更新时间**：2024-05-20  
 **仓库地址**：[github.com/your-team/scss2](https://github.com/your-team/scss2)  
 
