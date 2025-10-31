@@ -7,7 +7,7 @@ sys.path.insert(0, str(root))
 from communicator.tcp import ClassifierReceiver          # 若无需 TCP 可注释
 
 INI_PATH = r'source\config\config.ini'
-VALID_RATIO = 0.80          # 80 % 通道有标签才算有效帧
+VALID_RATIO = 0.20          # 80 % 通道有标签才算有效帧
 
 # ---------- 读取标签 ----------
 class CaseSensitiveConfigParser(configparser.ConfigParser):
@@ -47,6 +47,7 @@ def _is_valid_frame(arr640: np.ndarray, label_map: Dict[str, int]) -> bool:
     # print(valid_vals.size)
     # 只要值在 0~6 就视为合法，无需再查表
     ratio = valid_vals.size / 640.0
+    # print(ratio)
     return ratio >= VALID_RATIO
 
 # ---------- 累积状态 ----------
@@ -67,7 +68,9 @@ def match_hhit(arr640: np.ndarray) -> Tuple[Optional[int], str]:
     global _accum_buf, _in_sess
 
     valid = _is_valid_frame(arr640, _label_map)
+    # print(valid)
     cnt7 = statistics_data(arr640) if valid else None
+    # print(cnt7)
 
     if not _in_sess:                      # 阶段1：等待开始
         if not valid:
@@ -98,19 +101,21 @@ if __name__ == "__main__":
 
     def fake_640(empty: bool = False) -> np.ndarray:
         if empty:
-            return np.full(640, 0, np.float32)
+            return np.full(640, 9.0, np.float32)
         mask = np.random.rand(640) < 0.2
-        arr = np.where(mask, 2,
+        arr = np.where(mask, 3,
                        np.random.randint(1, 20, size=640)) \
               + np.random.rand(640) * 0.3
         return arr.astype(np.float32)
 
     def run_fake(seq_len: int = 30) -> None:
         for _ in range(seq_len):
-            arr640 = fake_640(empty=(random.random() < 0.3))   # 调高无效帧概率
+            arr640 = fake_640(empty=(random.random() < 0.3))
+            # print(arr640)
             lid, lname = match_hhit(arr640)
             print(lid, lname)
-        # 强制用空帧收尾
+
+        # ✅ 强制用无效帧收尾，触发结算
         lid, lname = match_hhit(fake_640(empty=True))
         if lid is not None:
             print(f"[序列结束] id={lid}  name={lname}")
