@@ -1,7 +1,7 @@
-import communicator.camera
-import communicator.FY5400
-import communicator.mbs
-import communicator.tcp
+import communicator.camera as camera
+import communicator.FY5400 as pcie
+import communicator.mbs as mbs
+import communicator.tcp as hhit
 
 class manager():
     def __init__(self,mode):
