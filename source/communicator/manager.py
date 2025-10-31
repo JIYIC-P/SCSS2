@@ -5,6 +5,9 @@ import communicator.tcp as hhit
 from typing import Dict, List, Tuple, Optional
 import numpy as np
 
+'''
+tcp回调函数，复用
+'''
 
 def __float_to_int(arr: np.ndarray) -> np.ndarray:
     """先 clip 再四舍五入，最后 uint8，保证 0-6"""
@@ -42,37 +45,38 @@ class manager():
         判断哪个mode，哪个mode需要哪些通信方式
         """
         if self.mode is not None:
+            self.pcie=pcie.FY5400IO(0)
+            self.pcie.start() #启动板卡读线程
             if self.mode in ('clip', 'yolo'): 
-                # self.pcie=pcie.FY5400IO(0)
                 self.camera0 = camera.ThreadedCamera(0)
                 self.camera1=camera.ThreadedCamera(0)
                 self.camera0.init_camera()     #打开一号相机 
                 self.camera1.init_camera()     #打开二号相机  
-                self.pcie.start() #启动板卡读线程
+                
             elif self.mode=='color':
                 self.camera0 = camera.ThreadedCamera(0)
-
                 self.camera0.init_camera()     #打开一号相机  
-                self.pcie.start() #启动板卡读线程
+                
             elif self.mode=='hhit':
                 self.hhit= hhit.ClassifierReceiver(on_transform_data=statistics_data)
                 self.hhit.start(server_ip="192.168.1.16", port=5555, rcv_buf_size=1000) #启动hhit接收640
-                self.pcie.start() #启动板卡读线程
+                
     def stop(self):
         """
         结束线程，但是保留对象
         """
         if self.mode is not None:
+            self.pcie.stop() 
             if self.mode in ('clip', 'yolo'): 
                 self.camera0.close_cam()     #关闭一号相机 
                 self.camera1.close_cam()     #关闭二号相机  
-                self.pcie.stop() #关闭板卡读线程
+                
             elif self.mode=='color':
                 self.camera0.close_cam()     #关闭一号相机   
-                self.pcie.stop() #启动板卡读线程
+                
             elif self.mode=='hhit':
                 self.hhit.stop()
-                self.pcie.stop() #启动板卡读线程
+                
         else :
             """
             此处加入对象检测，保证完全关闭
