@@ -124,15 +124,22 @@ class FY5400IO:
         I:param interval: 采样周期，秒
         O:无
         """
+        #TODO : 
         while self._running.is_set():
             with self._lock:
                 di = dll.FY5400_DI(self.hDev)      # 读硬件
-                self._di_cache = di              # 更新缓存
+                self.status = self.status_judg(di)
+                #TODO ：此处已修改，但是后续调用变量并未作修改
                 if self.send_sig :
                     pass#发self.order
             time.sleep(interval)
 
-
+    def status_judg(di):
+        """
+        此函数为工具，用于将读取的In信号转化为上升沿与下降沿,只需要记录上升沿与下降沿，如果是保持信号，则不更新
+        要求消抖处理：如短时间出现了信号跳变则忽略变化，时间可设置
+        """
+        return status 
 # ---------------- 简单测试 ----------------
 if __name__ == "__main__":
     io = FY5400IO()          # 打开板卡
