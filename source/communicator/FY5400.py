@@ -63,6 +63,9 @@ class FY5400IO:
         # 初始化DO为全0
         self.set_do(0)
 
+        self.send_sig = False
+        self.order = 0xffff
+
     # ---------------- 对外接口 ----------------
     def start(self, interval: float = 0.01):
         """
@@ -122,9 +125,11 @@ class FY5400IO:
         O:无
         """
         while self._running.is_set():
-            di = dll.FY5400_DI(self.hDev)      # 读硬件
             with self._lock:
+                di = dll.FY5400_DI(self.hDev)      # 读硬件
                 self._di_cache = di              # 更新缓存
+                if self.send_sig :
+                    pass#发self.order
             time.sleep(interval)
 
 

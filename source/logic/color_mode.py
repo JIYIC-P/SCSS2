@@ -12,7 +12,11 @@ MAX_SIZE = 640
 RATE = 0.9
 PASS_SIZE = MAX_SIZE * RATE                 # 如需阈值可复用
 
+"""
+color_mode中颜色范围的保存不是我写的，是小辈写得
 
+
+"""
 # ========== 工具函数（直接搬自原 Dialog.py） ==========
 def load_color_range(ini_path: str = INI_PATH) -> List[Tuple[List[int], List[int]]]:
     """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""

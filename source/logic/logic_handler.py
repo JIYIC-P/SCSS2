@@ -43,6 +43,7 @@ class updater():
         self.frame0=None
         self.frame1=None
         self.pcie_signal=None
+        # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
 
 
     def get_data(self):
@@ -73,8 +74,19 @@ class updater():
         """
         传入ID和工位信息
         根据其内容生成并返回16进制指令
+
+
+        详细解释：
+
+
+        1.order ：
+                0x0000 默认值 -|推动0号推杆|->             0x0001(0000000000000001)
+                0x0000 默认值 -|推动1号推杆|->             0x0002(0000000000000010)        
+                0x0000 默认值 -|同时推动五个推杆|->         0x001F(0000000000011111)
+        2.worker: list[5]:[1,2,3,4,5] -> 值代表衣服种类 worker-->
+        3.ID： int -> 值代表衣服种类
         """
-        return 
+        return order
     
     def send_order(self,order):
         """
@@ -94,6 +106,7 @@ class updater():
         self.send_order(ORDER)
 
     def Judgment(self,mode):
+        #TODO： match_j待完善
         '''注意只返回ID，最后记得统一返回值类型和数量'''
         if mode=="shape":
             # frame=self.streamer.grab_frame()
@@ -132,6 +145,7 @@ class updater():
 
 
 if __name__ == "__main__":
+
     img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
     u1=updater(manager('color'))
     frame = cv2.imread(img_path)
