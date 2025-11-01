@@ -5,6 +5,17 @@ sys.path.insert(0, str(root))
 
 import cv2
 import sys
+from communicator.manager import *
+'''
+工具函数
+'''
+
+def cut_img(self,frame,x,width,y,height):
+    '''裁剪图片'''
+    # OpenCV 的裁剪操作是通过 NumPy 的数组切片实现的
+    return frame[y:y + height, x:x + width]
+
+
 class updater():
     """
     fix
@@ -25,11 +36,6 @@ class updater():
         """
         self.com_model = communicator  
 
-    def cut_img(self,frame,x,width,y,height):
-        '''裁剪图片'''
-        # OpenCV 的裁剪操作是通过 NumPy 的数组切片实现的
-        return frame[y:y + height, x:x + width]
-    
     def get_data(self):
         """
 
@@ -42,6 +48,7 @@ class updater():
         2.获取图片（形状模式）
         3.获取hhit统计结果
         """
+        self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
         self.frame0 = self.com_model.camera0.grab_frame()
     def setmode(self,mode):
         self.mode = mode
@@ -103,7 +110,7 @@ class updater():
 
 if __name__ == "__main__":
     img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
-    u1=updater()
+    u1=updater(manager('color'))
     frame = cv2.imread(img_path)
     if frame is None:                       # ---- 关键检查 ----
         print("图片没读进来，请检查路径或文件是否损坏")
