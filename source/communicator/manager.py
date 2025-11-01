@@ -9,19 +9,22 @@ import numpy as np
 tcp回调函数，复用
 '''
 
-def __float_to_int(arr: np.ndarray) -> np.ndarray:
-    """先 clip 再四舍五入，最后 uint8，保证 0-6"""
-    clipped = np.clip(arr, 0.0, 20.0)
-    return np.round(clipped).astype(np.uint8)
+# def __float_to_int(arr: np.ndarray) -> np.ndarray:
+#     """先 clip 再四舍五入，最后 uint8，保证 0-6"""
+#     clipped = np.clip(arr, 0.0, 20.0)
+#     return np.round(clipped).astype(np.uint8)
 
-def statistics_data(float_array: np.ndarray) -> List[int]:
-    try:
-        int_array = __float_to_int(float_array)
-        counts = np.bincount(int_array, minlength=7)
-        return counts.tolist()
-    except Exception as e:
-        print(f"统计数据出错（数组形状：{float_array.shape}）：{e}")
-        return [0] * 7
+# def statistics_data(float_array: np.ndarray) -> List[int]:
+#     try:
+#         int_array = __float_to_int(float_array)
+#         counts = np.bincount(int_array, minlength=7)
+#         return counts.tolist()
+#     except Exception as e:
+#         print(f"统计数据出错（数组形状：{float_array.shape}）：{e}")
+#         return [0] * 7
+
+
+
 
 class manager():
 
@@ -58,7 +61,7 @@ class manager():
                 self.camera0.init_camera()     #打开一号相机  
                 
             elif self.mode=='hhit':
-                self.hhit= hhit.ClassifierReceiver(on_transform_data=statistics_data)
+                self.hhit= hhit.ClassifierReceiver()
                 self.hhit.start(server_ip="192.168.1.16", port=5555, rcv_buf_size=1000) #启动hhit接收640
                 
     def stop(self):

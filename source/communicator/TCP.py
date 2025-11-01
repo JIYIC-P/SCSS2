@@ -17,13 +17,16 @@ class ClassifierReceiver:
     让其专注于通信，也即每一帧回调后仅作统计，并更新统计后的数据，
     提供一个方法用于获取当前帧的统计结果，数据类型要求为整数列表
     """
-    def __init__(self, on_transform_data: Optional[Callable[[np.ndarray], None]] = None):
+    #def __init__(self, on_transform_data: Optional[Callable[[list], None]] = None):
+    def __init__(self):
+    
         # DLL 路径，需替换为你实际的 DLL 所在路径
         self.dll_path = r'source\Lib\ClassifyResultReceiver.dll'
 
         # 统计相关
         self.count_frame = 0
-        self.count = [0, 0, 0, 0, 0]  # 分别统计值为 1~5 的个数
+        self.count = None # 分别统计值为 1~5 的个数
+        self.float_array_np=None#新加变量--qi
         self.PASS_SIZE = 600  # 值为5的个数阈值，超过则重置
 
         # 加载 DLL
@@ -38,7 +41,7 @@ class ClassifierReceiver:
         self.error_callback = None
 
         # 用户自定义回调（可选）
-        self.on_transform_data = on_transform_data  # type: Optional[Callable[[np.ndarray], None]]
+        #self.on_transform_data = on_transform_data  # type: Optional[Callable[[np.ndarray], None]]
 
         # 绑定 DLL 函数
         self._bind_functions()
@@ -80,18 +83,21 @@ class ClassifierReceiver:
 
             FloatPtr = POINTER(c_float)
             float_ptr = cast(p_frame, FloatPtr)
-            float_array_np = as_array(float_ptr, shape=(float_count,))  # 零拷贝视图
+            self.float_array_np = as_array(float_ptr, shape=(float_count,))  # 零拷贝视图
             #values, counts = np.unique(arr.round(decimals), return_counts=True)
             # 构造长度为5的统计结果
-            int_array = np.round(float_array_np).astype(np.uint8)
-            stat = np.bincount(int_array, MAX_ARRY_LENGTH=6)
+
+            '''以下是原始代码'''
+            # int_array = np.round(float_array_np).astype(np.uint8)
+            # self.count = list(np.bincount(int_array, MAX_ARRY_LENGTH=6))
 
 
-            # --- 调用用户自定义回调（如果提供了）---
-            if self.on_transform_data is not None:
-                #values, counts = np.unique(float_array_np.round(0), return_counts=True)
-                #self.on_transform_data(float_array_np)  # 传入 numpy 数组 和 原始数据大小
-                self.on_transform_data(stat)
+
+            # # --- 调用用户自定义回调（如果提供了）---
+            # if self.on_transform_data is not None:
+            #     #values, counts = np.unique(float_array_np.round(0), return_counts=True)
+            #     #self.on_transform_data(float_array_np)  # 传入 numpy 数组 和 原始数据大小
+            #     self.on_transform_data(stat)
     def _on_error(self, err_msg):
         err_str = err_msg.decode('utf-8', errors='ignore')
         print(f"[回调 错误] 接收线程出错: {err_str}")
@@ -159,36 +165,36 @@ class ClassifierReceiver:
 # ✅ 示例：用户使用代码（可单独运行测试）
 # =============================
 
-if __name__ == "__main__":
-    # --- 示例：用户自定义回调 ---
+# if __name__ == "__main__":
+#     # --- 示例：用户自定义回调 ---
 
-    MAX_SIZE = 640
-    RATE = 0.9
-    PASS_SIZE = MAX_SIZE * RATE
-    count = [0,0,0,0]
-    def my_on_transform_data(float_array: np.ndarray):
-        count[4] = int(np.sum(float_array == 5))
-        if count[4] > PASS_SIZE:
-            count = [0, 0, 0, 0, PASS_SIZE]  # 重置，保留 count[4] 为 PASS_SIZE
-            return  # 超过阈值，不继续统计
+#     MAX_SIZE = 640
+#     RATE = 0.9
+#     PASS_SIZE = MAX_SIZE * RATE
+#     count = [0,0,0,0]
+#     def my_on_transform_data(float_array: np.ndarray):
+#         count[4] = int(np.sum(float_array == 5))
+#         if count[4] > PASS_SIZE:
+#             count = [0, 0, 0, 0, PASS_SIZE]  # 重置，保留 count[4] 为 PASS_SIZE
+#             return  # 超过阈值，不继续统计
 
-        count[0] = int(np.sum(float_array == 1))
-        count[1] = int(np.sum(float_array == 2))
-        count[2] = int(np.sum(float_array == 3))
-        count[3] = int(np.sum(float_array == 4))
-        print(count)
+#         count[0] = int(np.sum(float_array == 1))
+#         count[1] = int(np.sum(float_array == 2))
+#         count[2] = int(np.sum(float_array == 3))
+#         count[3] = int(np.sum(float_array == 4))
+#         print(count)
 
-    # --- 创建接收器实例，并传入自定义回调 ---
-    receiver = ClassifierReceiver(on_transform_data=my_on_transform_data)
+#     # --- 创建接收器实例，并传入自定义回调 ---
+#     receiver = ClassifierReceiver(on_transform_data=my_on_transform_data)
 
-    # --- 启动接收器 ---
-    if receiver.start(server_ip="192.168.1.16", port=5555, rcv_buf_size=1000):
-        try:
-            # 主线程保持运行，或者你可以做其他事情
-            import time
-            while receiver.is_running:
-                pass  # 或者 time.sleep(1)
-        except KeyboardInterrupt:
-            print("\n[主程序] 用户按下 Ctrl+C，停止中...")
-        finally:
-            receiver.stop()
+#     # --- 启动接收器 ---
+#     if receiver.start(server_ip="192.168.1.16", port=5555, rcv_buf_size=1000):
+#         try:
+#             # 主线程保持运行，或者你可以做其他事情
+#             import time
+#             while receiver.is_running:
+#                 pass  # 或者 time.sleep(1)
+#         except KeyboardInterrupt:
+#             print("\n[主程序] 用户按下 Ctrl+C，停止中...")
+#         finally:
+#             receiver.stop()

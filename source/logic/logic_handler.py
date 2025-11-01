@@ -6,6 +6,10 @@ sys.path.insert(0, str(root))
 import cv2
 import sys
 from communicator.manager import *
+import shape_mode
+import color_mode
+import clip_mode
+import hhit_mode
 '''
 工具函数
 '''
@@ -34,7 +38,12 @@ class updater():
         初始化传入通信管理对象，其模式与此类模式应统一
         update（）函数执行时只检测对象的数据（可以是信号量）是否准备完毕，不参与对象管理
         """
-        self.com_model = communicator  
+        self.com_model = communicator
+        self.hhit_signal=None
+        self.frame0=None
+        self.frame1=None
+        self.pcie_signal=None
+
 
     def get_data(self):
         """
@@ -46,10 +55,17 @@ class updater():
 
         选择：
         2.获取图片（形状模式）
-        3.获取hhit统计结果
+        3.获取hhit统计结果/原始信息
         """
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
-        self.frame0 = self.com_model.camera0.grab_frame()
+        if self.com_model.mode in ('clip', 'yolo'): 
+            self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
+            self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
+        elif self.com_model.mode=='color':
+            self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
+        elif self.com_model.mode=='hhit':
+            self.hhit_signal=self.com_model.hhit.float_array_np.copy() #获取原始hhit信息
+
     def setmode(self,mode):
         self.mode = mode
 
@@ -79,31 +95,38 @@ class updater():
 
     def Judgment(self,mode):
         '''注意只返回ID，最后记得统一返回值类型和数量'''
-        if mode=="形状":
-            import shape_mode
-            frame=self.streamer.grab_frame()
-            if frame is None:
+        if mode=="shape":
+            # frame=self.streamer.grab_frame()
+            if self.frame0 is None or self.frame1 is None:
+                print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
                 return
-            frame_cut = self.cut_img(frame, 470, 1136, 0, 1080)
-            return shape_mode.match_shape(frame_cut)
-        if mode=='颜色':
-            import color_mode
-            frame=self.streamer.grab_frame()
-            if frame is None:
+            frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
+            frame_cut1 = self.cut_img(self.frame1, 470, 1136, 0, 1080)
+            _, ID, _ = shape_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
+            return ID
+        if mode=='color':
+            # frame=self.streamer.grab_frame()
+            if self.frame0 is None:
+                print("[警告] frame0，无法执行后续操作")
                 return
-            frame_cut = self.cut_img(frame, 470, 1136, 0, 1080)
-            return color_mode.match_color(frame_cut)
+            frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
+            _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
+            return ID
         if mode=='clip':
-            import clip_mode
-            frame=self.streamer.grab_frame()
-            if frame is None:
+            # frame=self.streamer.grab_frame()
+            if self.frame0 is None or self.frame1 is None:
+                print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
                 return
-            frame_cut = self.cut_img(frame, 470, 1136, 0, 1080)
-            return clip_mode.match_clip(frame_cut,clip_mode.classifier)
+            frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
+            frame_cut1 = self.cut_img(self.frame1, 470, 1136, 0, 1080)
+            _, _, _,ID =  clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
+            return ID
         if mode=='HHIT':
-            import hhit_mode
-            return hhit_mode.match_hhit()
-  
+            if self.hhit_signal is None:
+                print("[警告] 未接收到高光谱信息，无法执行后续操作")
+                return
+            ID,_=hhit_mode.match_hhit(self.hhit_signal)
+            return ID
 
             
 
