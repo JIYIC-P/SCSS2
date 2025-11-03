@@ -28,11 +28,20 @@
 import time
 import threading
 from ctypes import windll
+from typing import Dict, List, Tuple, Optional
 
 # 1. 载入DLL（路径保持与用户示例一致）
 dll = windll.LoadLibrary(r"source\Lib\FY5400.dll")
 
 
+# def status_judg(di):
+#     """
+#     此函数为工具，用于将读取的In信号转化为上升沿与下降沿,只需要记录上升沿与下降沿，如果是保持信号，则不更新
+#     要求消抖处理：如短时间出现了信号跳变则忽略变化，时间可设置
+#     """
+
+    
+#     return status 
 class FY5400IO:
     """
     16位并行IO卡线程安全封装
@@ -60,11 +69,47 @@ class FY5400IO:
         self._do_cache = 0                  # 当前DO输出值
         self._thd = None                    # 后台线程对象
 
+        self._di_stable = 0          # 上一次稳定值
+        self._last_tm = [0.] * 16    # 各 bit 最近一次正式变化的时间
+        self.debounce = 0.02         # 消抖时间 s，可调
+        self.status=None
+
         # 初始化DO为全0
         self.set_do(0)
 
         self.send_sig = False
         self.order = 0xffff
+
+    def status_judg(self, di: int) -> list:
+        """
+        返回长度 16 的 list
+        -1  下降沿
+         0  无变化 / 保持
+         1  上升沿s
+        已消抖
+        """
+        now = time.time()
+        out = [0] * 16
+        changed = di ^ self._di_stable
+        if not changed:
+            return out
+
+        for bit in range(16):
+            mask = 1 << bit
+            if not (changed & mask):
+                continue                     # 该位没跳变
+            if now - self._last_tm[bit] < self.debounce:
+                continue                     # 还在抖动期
+
+            # 正式记录这次变化
+            self._last_tm[bit] = now
+            if (di & mask) and not (self._di_stable & mask): #当前位 = 1 且 上一次 = 0  上升沿
+                out[bit] = 1                 # 0 -> 1
+            elif not (di & mask) and (self._di_stable & mask):#当前位 = 0 且 上一次 = 1 下降沿
+                out[bit] = -1                # 1 -> 0
+
+        self._di_stable = di                 # 更新稳定值
+        return out
 
     # ---------------- 对外接口 ----------------
     def start(self, interval: float = 0.01):
@@ -134,12 +179,6 @@ class FY5400IO:
                     pass#发self.order
             time.sleep(interval)
 
-    def status_judg(di):
-        """
-        此函数为工具，用于将读取的In信号转化为上升沿与下降沿,只需要记录上升沿与下降沿，如果是保持信号，则不更新
-        要求消抖处理：如短时间出现了信号跳变则忽略变化，时间可设置
-        """
-        return status 
 # ---------------- 简单测试 ----------------
 if __name__ == "__main__":
     io = FY5400IO()          # 打开板卡

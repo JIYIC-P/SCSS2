@@ -39,7 +39,7 @@ classifier = clip.ImageClassifier(
     pretrained='webli',
     text_labels=MY_TEXT_LABELS)
 
-def match_clip(frame: np.ndarray,
+def match_clip(frame0: np.ndarray,frame1:np.ndarray,
                classifier,
                label_mapping: Optional[Dict[str, int]] = None) -> Tuple[np.ndarray, str, float, int]:
     """
@@ -53,10 +53,11 @@ def match_clip(frame: np.ndarray,
         conf     : 置信度
         label_id : 对应 ID
     """
+    #TODO :补充两张图片的逻辑
     if label_mapping is None:
         label_mapping = load_clip_label_mapping()
 
-    vis = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    vis = cv2.cvtColor(frame0, cv2.COLOR_BGR2RGB)
     pil_image = Image.fromarray(vis)
 
     label, conf = classifier.predict(pil_image)   # 返回 (str, float)

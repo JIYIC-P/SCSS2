@@ -4,7 +4,7 @@ sys.path.insert(0, str(root))
 
 
 import cv2
-import sys
+# import sys
 from communicator.manager import *
 import shape_mode
 import color_mode
@@ -37,12 +37,16 @@ class updater():
         """
         初始化传入通信管理对象，其模式与此类模式应统一
         update（）函数执行时只检测对象的数据（可以是信号量）是否准备完毕，不参与对象管理
-        """
+        # """
         self.com_model = communicator
         self.hhit_signal=None
         self.frame0=None
         self.frame1=None
         self.pcie_signal=None
+        self.pcie_status=None
+        self.worker=[1,2,3,4,5]
+        self.obj=[0,0,0,0,0,0] #物品
+        self.count_worker=[0,0,0,0,0]
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
 
 
@@ -58,7 +62,8 @@ class updater():
         2.获取图片（形状模式）
         3.获取hhit统计结果/原始信息
         """
-        self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
+        self.pcie_signal=self.com_model.pcie.get_di().copy() #获取pcie信息
+        self.pcie_status=self.com_model.pcie.status_judg(self.pcie_signal)
         if self.com_model.mode in ('clip', 'yolo'): 
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
             self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
@@ -70,7 +75,7 @@ class updater():
     def setmode(self,mode):
         self.mode = mode
 
-    def generate_order(self,ID,worker):
+    def generate_order(self,ID):
         """
         传入ID和工位信息
         根据其内容生成并返回16进制指令
@@ -86,12 +91,32 @@ class updater():
         2.worker: list[5]:[1,2,3,4,5] -> 值代表衣服种类 worker-->
         3.ID： int -> 值代表衣服种类
         """
-        return order
+        # 先找到ID对应的是哪个工位
+        for i in range(len(self.worker)):
+            if ID==self.worker[i]:
+                
+                order = 1 <<i 
+                print(f'0x{order:04X}')                     # 把对应 bit 置 1
+                # return f'0x{order:04X}'  
+                for j in range(1,i+1):#前置工位置一
+                    self.obj[j]+=1
+        
+        for i in range(1, len(self.obj)):
+            if self.pcie_status[i]==1:
+                self.obj[i]=self.obj[i]-1
+                if self.obj[i]==-1:
+                    self.obj[i]==0
+                    return f'0x{order:04X}'
+
+
+    
+
     
     def send_order(self,order):
         """
         调用pcie通信对象，发送指令
         """
+        self.com_model.pcie.set_do(order)
 
     def update(self):
         """
@@ -145,27 +170,29 @@ class updater():
 
 
 if __name__ == "__main__":
+    u1=updater()
+    u1.generate_order(1)
 
-    img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
-    u1=updater(manager('color'))
-    frame = cv2.imread(img_path)
-    if frame is None:                       # ---- 关键检查 ----
-        print("图片没读进来，请检查路径或文件是否损坏")
-        sys.exit()
+    # img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
+    # u1=updater(manager('color'))
+    # frame = cv2.imread(img_path)
+    # if frame is None:                       # ---- 关键检查 ----
+    #     print("图片没读进来，请检查路径或文件是否损坏")
+    #     sys.exit()
 
-    print("图片尺寸:", frame.shape[:2])
-    vis, cls, conf = u1.Judgment('形状')
-    print(f"检测结果 -> class_id={cls}, confidence={conf:.3f}")
-    # vis, hsv_avg, color_id =u1.Judgment('颜色')
-    # print(f"HSV 均值 -> {hsv_avg}")
-    # print(f"匹配结果 -> color_id={color_id}")
-    # vis, label, conf, label_id = u1.Judgment('clip')
-    # print(f"CLIP 预测 -> label={label}  conf={conf:.3f}  id={label_id}")
+    # print("图片尺寸:", frame.shape[:2])
+    # vis, cls, conf = u1.Judgment('形状')
+    # print(f"检测结果 -> class_id={cls}, confidence={conf:.3f}")
+    # # vis, hsv_avg, color_id =u1.Judgment('颜色')
+    # # print(f"HSV 均值 -> {hsv_avg}")
+    # # print(f"匹配结果 -> color_id={color_id}")
+    # # vis, label, conf, label_id = u1.Judgment('clip')
+    # # print(f"CLIP 预测 -> label={label}  conf={conf:.3f}  id={label_id}")
 
 
-    cv2.namedWindow("result", cv2.WINDOW_NORMAL)  # 确保窗口在前台
-    cv2.imshow("result", vis)
-    print("按任意键关闭窗口...")
-    cv2.waitKey(0)                            # 阻塞直到按键
-    cv2.destroyAllWindows()
+    # cv2.namedWindow("result", cv2.WINDOW_NORMAL)  # 确保窗口在前台
+    # cv2.imshow("result", vis)
+    # print("按任意键关闭窗口...")
+    # cv2.waitKey(0)                            # 阻塞直到按键
+    # cv2.destroyAllWindows()
     
