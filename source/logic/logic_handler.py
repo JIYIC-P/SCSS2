@@ -20,6 +20,7 @@ def cut_img(self,frame,x,width,y,height):
     return frame[y:y + height, x:x + width]
 
 
+
 class updater():
     """
     fix
@@ -44,9 +45,13 @@ class updater():
         self.frame1=None
         self.pcie_signal=None
         self.pcie_status=None
+        self.count=0
         self.worker=[1,2,3,4,5]
-        self.obj=[0,0,0,0,0,0] #物品
-        self.count_worker=[0,0,0,0,0]
+        self.obj=[0,0,0,0,0] #物品,暂时命名，具体含义是存放衣服序列的变化
+        #每个工位创建一个队列，存放要推的衣服顺序序列
+        self.count_worker_queues=[[],[],[],[],[]]
+       
+
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
 
 
@@ -75,7 +80,8 @@ class updater():
     def setmode(self,mode):
         self.mode = mode
 
-    def generate_order(self,ID):
+    
+    def generate_order(self,result):
         """
         传入ID和工位信息
         根据其内容生成并返回16进制指令
@@ -91,25 +97,27 @@ class updater():
         2.worker: list[5]:[1,2,3,4,5] -> 值代表衣服种类 worker-->
         3.ID： int -> 值代表衣服种类
         """
-        # 先找到ID对应的是哪个工位
-        for i in range(len(self.worker)):
-            if ID==self.worker[i]:
-                
-                order = 1 <<i 
-                print(f'0x{order:04X}')                     # 把对应 bit 置 1
-                # return f'0x{order:04X}'  
-                for j in range(1,i+1):#前置工位置一
-                    self.obj[j]+=1
+
+        cloth_id = result["ID"]          # 衣服类别
+        for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
+            if cloth_id == worker_id:                   # 找到目标工位
+                # 把衣服编号写进对应队列
+                self.count_worker_queues[idx].append(result["count"])
+                #把衣服编号写入对应obj
+                self.obj[0]=result["count"]
         
-        for i in range(1, len(self.obj)):
-            if self.pcie_status[i]==1:
-                self.obj[i]=self.obj[i]-1
-                if self.obj[i]==-1:
-                    self.obj[i]==0
-                    return f'0x{order:04X}'
-
-
-    
+        for i in range(len(self.worker)):
+            if self.pcie_status[i+1]==1:#判断是否触发上升沿
+                if self.count_worker_queues[i][0]==self.obj[i]:
+                    self.obj[i]=0
+                    if self.count_worker_queues[i]:
+                        self.count_worker_queues[i].pop(0)
+                    return 1<<i#返回推杆命令
+                else:
+                    self.obj.pop()        # 去掉最右边
+                    self.obj.insert(0, 0) # 最左边插 0
+        return 0x0000
+        #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
     
     def send_order(self,order):
@@ -126,8 +134,8 @@ class updater():
 
         """
         self.get_data()
-        ID = self.Judgment()
-        ORDER = self.generate_order(ID)
+        result= self.Judgment()
+        ORDER = self.generate_order(result)
         self.send_order(ORDER)
 
     def Judgment(self,mode):
@@ -141,7 +149,9 @@ class updater():
             frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
             frame_cut1 = self.cut_img(self.frame1, 470, 1136, 0, 1080)
             _, ID, _ = shape_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
-            return ID
+            #这里有点小问题，ID是否有效
+            self.count+=1
+            return {"ID": ID, "count": self.count}
         if mode=='color':
             # frame=self.streamer.grab_frame()
             if self.frame0 is None:
@@ -149,7 +159,8 @@ class updater():
                 return
             frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
             _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
-            return ID
+            self.count+=1
+            return {"ID": ID, "count": self.count}
         if mode=='clip':
             # frame=self.streamer.grab_frame()
             if self.frame0 is None or self.frame1 is None:
@@ -158,13 +169,15 @@ class updater():
             frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
             frame_cut1 = self.cut_img(self.frame1, 470, 1136, 0, 1080)
             _, _, _,ID =  clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
-            return ID
+            self.count+=1
+            return {"ID": ID, "count": self.count}
         if mode=='HHIT':
             if self.hhit_signal is None:
                 print("[警告] 未接收到高光谱信息，无法执行后续操作")
                 return
             ID,_=hhit_mode.match_hhit(self.hhit_signal)
-            return ID
+            self.count+=1
+            return {"ID": ID, "count": self.count}
 
             
 
