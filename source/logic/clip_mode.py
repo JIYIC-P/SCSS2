@@ -18,7 +18,7 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
     def optionxform(self, optionstr: str) -> str:
         return optionstr  # 不将选项名转换为小写
     
-def load_clip_label_mapping(config_path=r'source\config\config.ini'):
+def load_clip_label_mapping(config_path=r'Lib\config.ini'):
     cfg = CaseSensitiveConfigParser()
     cfg.read(config_path, encoding='utf-8')
     if 'CLIP_LABELS' not in cfg:

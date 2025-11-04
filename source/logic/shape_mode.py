@@ -14,7 +14,7 @@ from ultralytics import YOLO
 # MODEL = r"source\config\best_epoch400_mAP50-0.8509.pt"
 img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
 # TODO:目前只有了一张图片进行判断，后续补充第二张的处理逻辑和合并判断
-def match_shape(frame0: np.ndarray,frame1:np.ndarray, model_path: str = r"source\config\best_epoch400_mAP50-0.8509.pt"):
+def match_shape(frame0: np.ndarray,frame1:np.ndarray, model_path: str = r"Lib\best_epoch400_mAP50-0.8509.pt"):
     """
     IN
     OUT

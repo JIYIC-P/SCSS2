@@ -74,10 +74,7 @@ class updater():
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
             self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
         elif self.com_model.mode=='color':
-            '''调试用'''
-            img_path = r"C:\Users\14676\Desktop\happy-1281590_1280.jpg"
-            self.frame0  = cv2.imread(img_path)
-            #self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
+            self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
         elif self.com_model.mode=='hhit':
             self.hhit_signal=self.com_model.hhit.float_array_np.copy() #获取原始hhit信息
 
