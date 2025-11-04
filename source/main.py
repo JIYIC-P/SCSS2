@@ -3,10 +3,8 @@ root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
 
-import Ui #PYQT界面
+from Ui.main_window import Ui_MainWindow as main_window
 import logic.logic_handler as UPDATE
-#import communicator.
-
 import communicator.manager
 
 def main():
@@ -22,3 +20,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

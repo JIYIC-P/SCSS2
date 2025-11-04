@@ -124,7 +124,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "智能分选系统"))
         self.tabWidget.setToolTip(_translate("MainWindow", "<html><head/><body><p>显示相机图片</p><p><br/></p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.main), _translate("MainWindow", "主页"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.status), _translate("MainWindow", "状态"))
