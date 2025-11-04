@@ -1,10 +1,9 @@
-import sys, pathlib
-root = pathlib.Path(__file__).resolve().parent.parent      # 找到工程根
-sys.path.insert(0, str(root))  
-
-
-import cv2
 import sys
+from pathlib import Path  
+root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root))
+
+
 from communicator.manager import *
 import shape_mode
 import color_mode

@@ -1,6 +1,8 @@
-import pathlib,sys
-root = pathlib.Path(__file__).resolve().parent.parent
+import sys
+from pathlib import Path  
+root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
+
 
 
 from Ui.main_window import Ui_MainWindow as main_window

@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path  
+root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root))
+
+
 import communicator.camera as camera
 import communicator.FY5400 as pcie
 import communicator.mbs as mbs
