@@ -15,7 +15,7 @@ sys.path.insert(0, str(root))
 from Ui.main_window import Ui_MainWindow  
 from PyQt5.QtWidgets import QApplication, QMessageBox, QMainWindow
 
-class app(QMainWindow):  
+class core(QMainWindow):  
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainWindow()

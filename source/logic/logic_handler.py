@@ -4,11 +4,15 @@ root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
 
-from communicator.manager import *
-import shape_mode
-import color_mode
-import clip_mode
-import hhit_mode
+
+import logic.yolo_mode as yolo_mode
+import logic.color_mode as color_mode
+import logic.clip_mode as clip_mode
+import logic.hhit_mode as hhit_mode
+
+
+import time
+import cv2
 '''
 工具函数
 '''
@@ -67,7 +71,7 @@ class updater():
         3.获取hhit统计结果/原始信息
         """
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
-        print(self.pcie_signal)
+       
         self.pcie_status=self.com_model.pcie.status_judg(3)
         if self.com_model.mode in ('clip', 'yolo'): 
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
@@ -77,11 +81,12 @@ class updater():
         elif self.com_model.mode=='hhit':
             self.hhit_signal=self.com_model.hhit.float_array_np.copy() #获取原始hhit信息
 
+
     def setmode(self,mode):
         self.mode = mode
 
     
-    def generate_order(self,result):
+    def generate_order(self,result={'ID':1,'count':2}):
         """
         传入ID和工位信息
         根据其内容生成并返回16进制指令
@@ -119,12 +124,13 @@ class updater():
         return 0x0000
         #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
-    
+
     def send_order(self,order):
         """
         调用pcie通信对象，发送指令
         """
         self.com_model.pcie.set_do(order)
+
 
     def update(self):
         """
@@ -134,35 +140,33 @@ class updater():
 
         """
         self.get_data()
-        result= self.Judgment('color')
-        ORDER = self.generate_order(result)
-        self.send_order(ORDER)
+        result= self.Judgment()
+        if result is not None:
+            ORDER = self.generate_order(result)
+            self.send_order(ORDER)
 
-    def Judgment(self,mode):
+
+    def Judgment(self):
         #TODO： match_j待完善
         '''注意只返回ID，最后记得统一返回值类型和数量'''
-        if mode=="shape":
-            # frame=self.streamer.grab_frame()
-            if self.frame0 is None or self.frame1 is None:
-                print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
-                return
-            frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
-            frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-            _, ID, _ = shape_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
-            #这里有点小问题，ID是否有效
-            self.count+=1
-            return {"ID": ID, "count": self.count}
-        if mode=='color':
-            # frame=self.streamer.grab_frame()
-            if self.frame0 is None:
-                print("[警告] frame0，无法执行后续操作")
-                return
-            frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
-            _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
-            self.count+=1
-            return {"ID": 2, "count": 1}
-        if mode=='clip':
-            # frame=self.streamer.grab_frame()
+        if self.mode=="yolo":
+
+            if self.frame0 is not None: #or self.frame1 is None:
+                frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+                frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
+                _, ID, _ = yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
+                #这里有点小问题，ID是否有效
+                self.count+=1
+                return {"ID": ID, "count": self.count}
+        if self.mode=='color':
+
+            if self.frame0 is not None:
+                frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+                _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
+                self.count+=1
+                return {"ID": 2, "count": 1}
+        if self.mode=='clip':
+
             if self.frame0 is None or self.frame1 is None:
                 print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
                 return
@@ -171,7 +175,7 @@ class updater():
             _, _, _,ID =  clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
             self.count+=1
             return {"ID": ID, "count": self.count}
-        if mode=='HHIT':
+        if self.mode=='HHIT':
             if self.hhit_signal is None:
                 print("[警告] 未接收到高光谱信息，无法执行后续操作")
                 return
@@ -183,8 +187,16 @@ class updater():
 
 
 if __name__ == "__main__":
-    u1=updater(manager('color'))
-    u1.update()
+    from communicator.manager import manager
+    com_manager = manager()
+    com_manager.setmode("color")
+
+    u1=updater(com_manager)
+    u1.setmode("color")
+    t1 = time.time()
+    
+    while time.time() - t1 < 10:
+        u1.update()
     # u1.generate_order(1)
 
     # img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"

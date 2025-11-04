@@ -1,5 +1,5 @@
 # hhit_match.py
-import sys, pathlib, os, configparser, numpy as np
+import sys, pathlib, configparser, numpy as np
 from typing import Dict, List, Tuple, Optional
 
 root = pathlib.Path(__file__).resolve().parent.parent

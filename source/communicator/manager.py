@@ -8,8 +8,7 @@ import communicator.camera as camera
 import communicator.FY5400 as pcie
 import communicator.mbs as mbs
 import communicator.tcp as hhit
-from typing import Dict, List, Tuple, Optional
-import numpy as np
+
 
 '''
 tcp回调函数，复用
@@ -34,20 +33,20 @@ tcp回调函数，复用
 
 class manager():
 
-    def __init__(self,mode = None):
+    def __init__(self):
         """
         传入模式，根据模式判断来创建和管理对象
         初始化若传入mode 则启动，否则创建none对象
         """
-        if mode is not None:
-            self.mode = mode
-            self.start()
-        else:
-            self.camera0 = None
-            self.camera1 = None
-            self.pcie = None
-            self.hhit = None
+
+        self.camera0 = None
+        self.camera1 = None
+        self.pcie = None
+        self.hhit = None
     
+    def setmode(self,mode):
+        self.mode = mode
+        self.start()
 
     def start(self):
         """

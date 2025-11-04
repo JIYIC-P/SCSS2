@@ -69,7 +69,7 @@ class FY5400IO:
         self._do_cache = 0                  # 当前DO输出值
         self._thd = None                    # 后台线程对象
 
-        self._di_stable = 0          # 上一次稳定值
+        self._di_prve = 0          # 上一次稳定值
         self._last_tm = [0.] * 16    # 各 bit 最近一次正式变化的时间
         self.debounce = 0.02         # 消抖时间 s，可调
         self.status=None
@@ -90,8 +90,8 @@ class FY5400IO:
         """
         now = time.time()
         out = [0] * 6
-        changed = (di ^ self._di_stable) & 0x3F   # 只拿低六位进行判断
-        print(di,self._di_stable,changed)
+        changed = (di ^ self._di_prve) & 0x3F   # 只拿低六位进行判断
+        print("in，prve，change：",di,self._di_prve,changed)
         if not changed:
             return out
 
@@ -104,12 +104,12 @@ class FY5400IO:
 
             # 正式记录这次变化
             self._last_tm[bit] = now
-            if (di & mask) and not (self._di_stable & mask): #当前位 = 1 且 上一次 = 0  上升沿
+            if (di & mask) and not (self._di_prve & mask): #当前位 = 1 且 上一次 = 0  上升沿
                 out[bit] = 1                 # 0 -> 1
-            elif not (di & mask) and (self._di_stable & mask):#当前位 = 0 且 上一次 = 1 下降沿
+            elif not (di & mask) and (self._di_prve & mask):#当前位 = 0 且 上一次 = 1 下降沿
                 out[bit] = -1                # 1 -> 0
 
-        self._di_stable = di                 # 更新稳定值
+        self._di_prve = di                 # 更新稳定值
         return out
 
     # ---------------- 对外接口 ----------------

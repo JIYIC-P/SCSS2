@@ -83,19 +83,28 @@ def match_color(frame: np.ndarray,
 
 # ====================== 单张图片测试 =======================
 if __name__ == "__main__":
-    img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-09-54.png"
-    frame = cv2.imread(img_path)
-    if frame is None:
-        print("图片没读进来，请检查路径或文件是否损坏")
-        sys.exit()
+    import sys
+    from pathlib import Path  
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root))
 
-    print("图片尺寸:", frame.shape[:2])
-    vis, hsv_avg, color_id = match_color(frame)
-    print(f"HSV 均值 -> {hsv_avg}")
-    print(f"匹配结果 -> color_id={color_id}")
+    from communicator.camera import ThreadedCamera
+    import time
+    camera = ThreadedCamera(0)
+    camera.init_camera()
+    t = time.time()
+    t1 = time.time()
+    while t1 - t < 10:
+        t1 = time.time()
 
-    cv2.namedWindow("color_result", cv2.WINDOW_NORMAL)
-    cv2.imshow("color_result", cv2.cvtColor(vis, cv2.COLOR_RGB2BGR))
-    print("按任意键关闭窗口...")
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        frame = camera.grab_frame()
+
+        if frame is not None:
+            vis, hsv_avg, color_id = match_color(frame)
+            print(f"HSV 均值 -> {hsv_avg}")
+            print(f"匹配结果 -> color_id={color_id}")
+            cv2.imshow("color_result", vis)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            camera.close_cam()
+            break
+

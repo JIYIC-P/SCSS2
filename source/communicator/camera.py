@@ -39,7 +39,7 @@ class ThreadedCamera:
               4. 启动独立线程持续更新视频帧
         """
         try:
-            self.cap = cv2.VideoCapture(self.source, cv2.CAP_DSHOW)  # Windows使用DirectShow
+            self.cap = cv2.VideoCapture(self.source, cv2.CAP_MSMF)  # Windows使用DirectShow
             if not self.cap.isOpened():
                 raise Exception("无法打开相机")
             
@@ -48,6 +48,7 @@ class ThreadedCamera:
             
             # 启动帧更新线程
             self.thread = Thread(target=self.update, daemon=True)
+            print("_____")
             self.thread.start()
 
         except Exception as e:
@@ -95,7 +96,9 @@ class ThreadedCamera:
               1. 检查相机连接状态，异常时尝试重新初始化
               2. 读取最新视频帧并缓存到current_frame
               3. 处理读取失败情况（释放资源并尝试重连）
+              
         """
+       
         while self._running:
             if self.cap is None or not self.camera_opened:
                 try:
@@ -106,10 +109,10 @@ class ThreadedCamera:
                     print(f"打开相机失败: {e}")
                     time.sleep(0.1)
                     continue
-                
+            
             ret, frame = self.cap.read()
             if ret:
-                    self.current_frame = frame.copy()
+                self.current_frame = frame
             else:
                 print("读取帧失败，尝试重新初始化相机...")
                 self.camera_opened = False
@@ -127,7 +130,7 @@ class ThreadedCamera:
               保证外部使用帧数据时不影响内部帧更新
         """
         if self.current_frame is not None:
-            return self.current_frame.copy()
+            return self.current_frame
         return None
 
     def close_cam(self):

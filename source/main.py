@@ -5,9 +5,11 @@ sys.path.insert(0, str(root))
 
 
 
-from Ui.main_window import Ui_MainWindow as main_window
+from Ui.Ui_manager import core 
 import logic.logic_handler as UPDATE
 import communicator.manager
+from PyQt5.QtWidgets import QApplication, QMessageBox, QMainWindow
+
 
 def main():
     """
@@ -19,6 +21,13 @@ def main():
     4.启动逻辑处理类，只创建对象，不启动线程
     5.主循环（获取前端用户操作，如果操作对应更新）
     """
+    try:
+        app = QApplication(sys.argv)
+        window = core()
+        window.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(f"发生错误：{str(e)}")
 
 if __name__ == "__main__":
     main()
