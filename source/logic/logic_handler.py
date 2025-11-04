@@ -8,13 +8,13 @@ import cv2
 from communicator.manager import *
 import shape_mode
 import color_mode
-import clip_mode
+# import clip_mode
 import hhit_mode
 '''
 工具函数
 '''
 
-def cut_img(self,frame,x,width,y,height):
+def cut_img(frame,x,width,y,height):
     '''裁剪图片'''
     # OpenCV 的裁剪操作是通过 NumPy 的数组切片实现的
     return frame[y:y + height, x:x + width]
@@ -67,13 +67,17 @@ class updater():
         2.获取图片（形状模式）
         3.获取hhit统计结果/原始信息
         """
-        self.pcie_signal=self.com_model.pcie.get_di().copy() #获取pcie信息
-        self.pcie_status=self.com_model.pcie.status_judg(self.pcie_signal)
+        self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
+        print(self.pcie_signal)
+        self.pcie_status=self.com_model.pcie.status_judg(3)
         if self.com_model.mode in ('clip', 'yolo'): 
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
             self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
         elif self.com_model.mode=='color':
-            self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
+            '''调试用'''
+            img_path = r"C:\Users\14676\Desktop\happy-1281590_1280.jpg"
+            self.frame0  = cv2.imread(img_path)
+            #self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
         elif self.com_model.mode=='hhit':
             self.hhit_signal=self.com_model.hhit.float_array_np.copy() #获取原始hhit信息
 
@@ -134,7 +138,7 @@ class updater():
 
         """
         self.get_data()
-        result= self.Judgment()
+        result= self.Judgment('color')
         ORDER = self.generate_order(result)
         self.send_order(ORDER)
 
@@ -146,8 +150,8 @@ class updater():
             if self.frame0 is None or self.frame1 is None:
                 print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
                 return
-            frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
-            frame_cut1 = self.cut_img(self.frame1, 470, 1136, 0, 1080)
+            frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+            frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
             _, ID, _ = shape_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
             #这里有点小问题，ID是否有效
             self.count+=1
@@ -157,20 +161,20 @@ class updater():
             if self.frame0 is None:
                 print("[警告] frame0，无法执行后续操作")
                 return
-            frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
+            frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
             _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
             self.count+=1
-            return {"ID": ID, "count": self.count}
-        if mode=='clip':
-            # frame=self.streamer.grab_frame()
-            if self.frame0 is None or self.frame1 is None:
-                print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
-                return
-            frame_cut0 = self.cut_img(self.frame0, 470, 1136, 0, 1080)
-            frame_cut1 = self.cut_img(self.frame1, 470, 1136, 0, 1080)
-            _, _, _,ID =  clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
-            self.count+=1
-            return {"ID": ID, "count": self.count}
+            return {"ID": 2, "count": 1}
+        # if mode=='clip':
+        #     # frame=self.streamer.grab_frame()
+        #     if self.frame0 is None or self.frame1 is None:
+        #         print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
+        #         return
+        #     frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+        #     frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
+        #     _, _, _,ID =  clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
+        #     self.count+=1
+        #     return {"ID": ID, "count": self.count}
         if mode=='HHIT':
             if self.hhit_signal is None:
                 print("[警告] 未接收到高光谱信息，无法执行后续操作")
@@ -183,8 +187,9 @@ class updater():
 
 
 if __name__ == "__main__":
-    u1=updater()
-    u1.generate_order(1)
+    u1=updater(manager('color'))
+    u1.update()
+    # u1.generate_order(1)
 
     # img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
     # u1=updater(manager('color'))

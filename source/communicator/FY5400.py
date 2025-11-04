@@ -31,7 +31,7 @@ from ctypes import windll
 from typing import Dict, List, Tuple, Optional
 
 # 1. 载入DLL（路径保持与用户示例一致）
-dll = windll.LoadLibrary(r"source\Lib\FY5400.dll")
+dll = windll.LoadLibrary(r"Lib\FY5400.dll")
 
 
 # def status_judg(di):
@@ -89,12 +89,13 @@ class FY5400IO:
         已消抖
         """
         now = time.time()
-        out = [0] * 16
-        changed = di ^ self._di_stable
+        out = [0] * 6
+        changed = (di ^ self._di_stable) & 0x3F   # 只拿低六位进行判断
+        print(di,self._di_stable,changed)
         if not changed:
             return out
 
-        for bit in range(16):
+        for bit in range(6):
             mask = 1 << bit
             if not (changed & mask):
                 continue                     # 该位没跳变
@@ -142,7 +143,8 @@ class FY5400IO:
         O: 16位DI数据
         """
         with self._lock:
-            return hex(self._di_cache)#返回16进制数
+            print(int(self._di_cache))
+            return int(self._di_cache)#返回16进制数
 
     def set_do(self, value: int):
         """

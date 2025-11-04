@@ -7,7 +7,7 @@ import sys
 from typing import List, Tuple, Optional
 
 # ========== 参数区（与主程序保持一致） ==========
-INI_PATH = r"source\config\config.ini"      # 含 [COLOR_RANGES] 字段
+INI_PATH = r"Lib\config.ini"      # 含 [COLOR_RANGES] 字段
 MAX_SIZE = 640
 RATE = 0.9
 PASS_SIZE = MAX_SIZE * RATE                 # 如需阈值可复用
