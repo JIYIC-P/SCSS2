@@ -80,41 +80,42 @@ class manager():
             elif self.mode=='hhit':
                 self.hhit.stop()
                 
-        else :
-            """
-            此处加入对象检测，保证完全关闭
-            """      
-        # 相机 0
-            if self.camera0 is not None:
-                try:
-                    self.camera0.close_cam()
-                except Exception as e:
-                    print(f"[WARN] camera0 close failed: {e}")
-                self.camera0 = None
 
-            # 相机 1
-            if self.camera1 is not None:
-                try:
-                    self.camera1.close_cam()
-                except Exception as e:
-                    print(f"[WARN] camera1 close failed: {e}")
-                self.camera1 = None
+        """
+        此处加入对象检测，保证完全关闭
+        """      
+    # 相机 0
+        if self.camera0 is not None:
+            try:
+                self.camera0.close_cam()
+            except Exception as e:
+                print(f"[WARN] camera0 close failed: {e}")
+            self.camera0 = None
 
-            # 板卡
-            if self.pcie is not None:
-                try:
-                    self.pcie.stop()
-                except Exception as e:
-                    print(f"[WARN] pcie stop failed: {e}")
-                self.pcie = None
+        # 相机 1
+        if self.camera1 is not None:
+            try:
+                self.camera1.close_cam()
+            except Exception as e:
+                print(f"[WARN] camera1 close failed: {e}")
+            self.camera1 = None
 
-            # hhit TCP 接收器
-            if self.hhit is not None:
-                try:
-                    self.hhit.stop()
-                except Exception as e:
-                    print(f"[WARN] hhit stop failed: {e}")
-                self.hhit = None
+        # 板卡
+        if self.pcie is not None:
+            try:
+                self.pcie.stop()
+            except Exception as e:
+                print(f"[WARN] pcie stop failed: {e}")
+            self.pcie = None
+
+        # hhit TCP 接收器
+        if self.hhit is not None:
+            try:
+                self.hhit.stop()
+            except Exception as e:
+                print(f"[WARN] hhit stop failed: {e}")
+            self.hhit = None
+            
     def changemode(self,mode):
         """
         根据传入的mode来选择启动和停止哪些对象及其线程

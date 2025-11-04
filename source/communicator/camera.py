@@ -198,9 +198,6 @@ class ThreadedCamera:
             ("CAP_PROP_TEMPERATURE", cv2.CAP_PROP_TEMPERATURE),  # 某些工业相机支持
             ("CAP_PROP_TRIGGER", cv2.CAP_PROP_TRIGGER),
             ("CAP_PROP_TRIGGER_DELAY", cv2.CAP_PROP_TRIGGER_DELAY),
-            # 你原来代码里重复了，这里去重，但保留一次即可
-            # ("CAP_PROP_WHITE_BALANCE_RED_U", cv2.CAP_PROP_WHITE_BALANCE_RED_U),
-            # ("CAP_PROP_WHITE_BALANCE_BLUE_V", cv2.CAP_PROP_WHITE_BALANCE_BLUE_V),
         ]
 
         print("--- 开始列出摄像头支持的属性 ---")
