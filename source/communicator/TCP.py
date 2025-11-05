@@ -1,3 +1,5 @@
+# tcp.py 需要是小写
+
 import ctypes
 from ctypes import *
 import threading
@@ -5,6 +7,7 @@ from numpy.ctypeslib import as_array
 
 MAX_ARRY_LENGTH=6#最大数值长度
 class ClassifierReceiver:
+    
     """
     现有
     此类用于接受来自其它tcp客户端的数据，数据格式为640*(float),numpy
@@ -15,7 +18,6 @@ class ClassifierReceiver:
     让其专注于通信，也即每一帧回调后仅作统计，并更新统计后的数据，
     提供一个方法用于获取当前帧的统计结果，数据类型要求为整数列表
     """
-    #def __init__(self, on_transform_data: Optional[Callable[[list], None]] = None):
     def __init__(self):
     
         # DLL 路径，需替换为你实际的 DLL 所在路径
