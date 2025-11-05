@@ -25,7 +25,7 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
     
 
 class ImageClassifier:
-    def __init__(self, model_name='ViT-SO400M-16-SigLIP2-512', pretrained='webli',path=pathlib.Path(__file__).parent.parent.parent / r"settings\default_config.json"):
+    def __init__(self, model_name='ViT-SO400M-16-SigLIP2-512', pretrained='webli',data=None):
         """
         初始化分类器，加载模型、分词器、预处理和文本标签。
 
@@ -41,9 +41,8 @@ class ImageClassifier:
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
         self.model.eval()
         self.model = self.model.to(self.device)
-        with open(path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-        self.label_mapping = data['CLIP_LABELS']
+        
+        self.label_mapping = data
         print(self.label_mapping)
         # 获取分词器
         self.tokenizer = open_clip.get_tokenizer(model_name)
@@ -135,7 +134,21 @@ class ImageClassifier:
 
 if __name__ == "__main__":
     import sys
-    classifier = ImageClassifier()
+    data={
+            "T-shirt": 0,
+            "black clothing": 1,
+            "winter clothing": 2,
+            "summer clothing": 3,
+            "plush toy": 4,
+            "down jacket": 5,
+            "wallet": 6,
+            "sweater": 7,
+            "leggings": 8,
+            "underwear": 9,
+            "shoe": 10,
+            "dress": 11
+        }
+    classifier = ImageClassifier(data=data)
     img_path = r"C:\Users\14676\Desktop\new_env\shoe\imgs\2025-10-16-13-43-33.png"
     frame = cv2.imread(img_path)
     frame0 = frame.copy()
