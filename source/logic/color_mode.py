@@ -13,13 +13,7 @@ RATE = 0.9
 PASS_SIZE = MAX_SIZE * RATE  # 如需阈值可复用
 
 
-def get_path():
-    '''获取加载json的路径'''
-    user_file = pathlib.Path(__file__).parent.parent.parent/r"settings/user_config.json"
-    if user_file.exists():
-        return user_file
-    else:
-        return pathlib.Path(__file__).parent.parent.parent/r"settings/default_config.json"
+
 
 
 # ========== 工具函数（直接搬自原 Dialog.py） ==========

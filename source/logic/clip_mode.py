@@ -16,13 +16,7 @@ MY_TEXT_LABELS = [
         "underwear", "shoe", "dress"
     ]
 
-def get_path():
-    '''获取加载json的路径'''
-    user_file = pathlib.Path(__file__).parent.parent.parent/r"settings/user_config.json"
-    if user_file.exists():
-        return user_file
-    else:
-        return pathlib.Path(__file__).parent.parent.parent/r"settings/default_config.json"
+
 
 class CaseSensitiveConfigParser(configparser.ConfigParser):
     """继承ConfigParser，覆盖optionxform方法以保持选项名原样"""
@@ -31,7 +25,7 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
     
 
 class ImageClassifier:
-    def __init__(self, model_name='ViT-SO400M-16-SigLIP2-512', pretrained='webli'):
+    def __init__(self, model_name='ViT-SO400M-16-SigLIP2-512', pretrained='webli',path=pathlib.Path(__file__).parent.parent.parent / r"settings\default_config.json"):
         """
         初始化分类器，加载模型、分词器、预处理和文本标签。
 
@@ -47,7 +41,7 @@ class ImageClassifier:
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
         self.model.eval()
         self.model = self.model.to(self.device)
-        with open(get_path(), 'r', encoding='utf-8') as file:
+        with open(path, 'r', encoding='utf-8') as file:
             data = json.load(file)
         self.label_mapping = data['CLIP_LABELS']
         print(self.label_mapping)

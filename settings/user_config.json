@@ -1,15 +1,17 @@
 {
   "camera": {
-    "fps": 50,
-    "exposure": -6,
-    "resolution": [
-      1900,
-      1080
-    ],
-    "brightness": 100,
-    "contrast": 50
+    "config": {
+      "fps": 50,
+      "exposure": -6,
+      "resolution": [
+        1900,
+        1080
+      ],
+      "brightness": 100,
+      "contrast": 50
+    }
   },
-  "COLOR_RANGES": {
+  "color_mode": {
     "ranges": {
       "0": [
         [
@@ -17,7 +19,7 @@
           250.5,
           172.1
         ],
-        6
+        5
       ],
       "1": [
         [
@@ -53,27 +55,47 @@
       ]
     }
   },
-  "CLIP_LABELS": {
-    "T-shirt": 0,
-    "black clothing": 1,
-    "winter clothing": 2,
-    "summer clothing": 3,
-    "plush toy": 4,
-    "down jacket": 5,
-    "wallet": 6,
-    "sweater": 7,
-    "leggings": 8,
-    "underwear": 9,
-    "shoe": 10,
-    "dress": 11
+  "clip_mode": {
+    "labels": {
+      "T-shirt": 0,
+      "black clothing": 1,
+      "winter clothing": 2,
+      "summer clothing": 3,
+      "plush toy": 4,
+      "down jacket": 5,
+      "wallet": 6,
+      "sweater": 7,
+      "leggings": 8,
+      "underwear": 9,
+      "shoe": 10,
+      "dress": 11
+    }
   },
-  "HHIT_LABELS": {
-    "\u6da4": 0,
-    "90\u6da4": 1,
-    "50\u6da4": 2,
-    "\u68c9": 3,
-    "90\u68c9": 4,
-    "50\u68c9": 5,
-    "\u5176\u5b83": 6
+  "hhit_mode": {
+    "labels": {
+      "\u6da4": 0,
+      "90\u6da4": 1,
+      "50\u6da4": 2,
+      "\u68c9": 999,
+      "90\u68c9": 4,
+      "50\u68c9": 5,
+      "\u5176\u5b83": 6
+    }
+  },
+  "qt": {
+    "config": {
+      "mode": ""
+    }
+  },
+  "tcp": {
+    "address": {
+      "ip": "127.0.0.1",
+      "port": 5555
+    }
+  },
+  "yolo_mode": {
+    "path": {
+      "pt": "Lib\best.pt"
+    }
   }
 }
