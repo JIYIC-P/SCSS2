@@ -10,6 +10,7 @@ import logic.color_mode as color_mode
 import logic.clip_mode as clip_mode
 import logic.hhit_mode as hhit_mode
 
+import random
 
 import time
 import cv2
@@ -86,7 +87,7 @@ class Updater():
         self.mode = mode
 
     
-    def generate_order(self,result={'ID':1,'count':2}):
+    def generate_order(self,result):
         """
         传入ID和工位信息
         根据其内容生成并返回16进制指令
@@ -112,6 +113,8 @@ class Updater():
                 self.obj[0]=result["count"]
         
         for i in range(len(self.worker)):
+            if len(self.count_worker_queues[i]) == 0:
+                continue
             if self.pcie_status[i+1]==1:#判断是否触发上升沿
                 if self.count_worker_queues[i][0]==self.obj[i]:
                     self.obj[i]=0
@@ -143,6 +146,7 @@ class Updater():
         result= self.Judgment()
         if result is not None:
             ORDER = self.generate_order(result)
+            print(ORDER)
             self.send_order(ORDER)
 
 
@@ -151,20 +155,21 @@ class Updater():
         '''注意只返回ID，最后记得统一返回值类型和数量'''
         if self.mode=="yolo":
 
-            if self.frame0 is not None: #or self.frame1 is None:
+            if self.frame0 is not None and self.frame1 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
                 _, ID, _ = yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
                 self.count+=1
                 return {"ID": ID, "count": self.count}
+                #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
 
             if self.frame0 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
-                return {"ID": 2, "count": 1}
+                return {"ID": ID, "count": self.count}
         if self.mode=='clip':
 
             if self.frame0 is None or self.frame1 is None:
@@ -189,10 +194,10 @@ class Updater():
 if __name__ == "__main__":
     from communicator.manager import manager
     com_manager = manager()
-    com_manager.setmode("color")
+    com_manager.setmode("yolo")
 
     u1=Updater(com_manager)
-    u1.setmode("color")
+    u1.setmode("yolo")
     t1 = time.time()
     
     while time.time() - t1 < 10:
