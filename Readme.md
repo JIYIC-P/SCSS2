@@ -8,7 +8,7 @@
 ## 一、项目概述
 ### 1.1 背景
 后端：Python
-前端：Python + PyQt（桌面端 GUI，无需额外环境）。
+前端：Python + PyQt
 ### 1.2 重构核心目标
 ​​全栈 Python 化​​：解决桌面端部署痛点，兼容 Windows/Linux/macOS；
 ​​通信增强​​：用 Python 调用C DLL库提升通信性能；
