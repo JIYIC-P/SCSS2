@@ -1,6 +1,7 @@
 # hhit_match.py
 import sys, pathlib, configparser, numpy as np
 from typing import Dict, List, Tuple, Optional
+import json
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
@@ -9,19 +10,26 @@ from communicator.tcp import ClassifierReceiver          # 若无需 TCP 可注�
 INI_PATH = r'Lib\config.ini'
 VALID_RATIO = 0.20          # 80 % 通道有标签才算有效帧
 
+def get_path():
+    '''获取加载json的路径'''
+    user_file = pathlib.Path(__file__).parent.parent.parent/r"settings/user_config.json"
+    if user_file.exists():
+        return user_file
+    else:
+        return pathlib.Path(__file__).parent.parent.parent/r"settings/default_config.json"
 # ---------- 读取标签 ----------
 class CaseSensitiveConfigParser(configparser.ConfigParser):
     def optionxform(self, optionstr: str) -> str:
         return optionstr
 
-def load_HHIT_label(config_path: str = INI_PATH) -> Dict[str, int]:
-    cfg = CaseSensitiveConfigParser()
-    cfg.read(config_path, encoding='utf-8')
-    if 'HHIT_LABELS' not in cfg:
-        print("[警告] 未找到 [HHIT_LABELS] 配置，无法加载 HHIT 标签与ID映射")
-        return {}
-    section = cfg['HHIT_LABELS']
-    return {label: int(v.strip()) for label, v in section.items()}
+# def load_HHIT_label(config_path: str = INI_PATH) -> Dict[str, int]:
+#     cfg = CaseSensitiveConfigParser()
+#     cfg.read(config_path, encoding='utf-8')
+#     if 'HHIT_LABELS' not in cfg:
+#         print("[警告] 未找到 [HHIT_LABELS] 配置，无法加载 HHIT 标签与ID映射")
+#         return {}
+#     section = cfg['HHIT_LABELS']
+#     return {label: int(v.strip()) for label, v in section.items()}
 
 # ---------- 统一的小数→整数 ----------
 def __float_to_int(arr: np.ndarray) -> np.ndarray:
@@ -53,7 +61,9 @@ def _is_valid_frame(arr640: np.ndarray, label_map: Dict[str, int]) -> bool:
 # ---------- 累积状态 ----------
 _accum_buf: List[List[int]] = []
 _in_sess = False
-_label_map = load_HHIT_label()          # 全局复用
+with open(get_path(), 'r', encoding='utf-8') as file:
+    data = json.load(file)
+_label_map = data['HHIT_LABELS']         # 全局复用
 
 def _reset() -> None:
     global _accum_buf, _in_sess

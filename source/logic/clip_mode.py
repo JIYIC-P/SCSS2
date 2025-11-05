@@ -5,6 +5,8 @@ import sys
 from PIL import Image
 from typing import List, Tuple, Optional,Dict
 import torch
+import json
+import pathlib
 import open_clip
 
 
@@ -14,6 +16,13 @@ MY_TEXT_LABELS = [
         "underwear", "shoe", "dress"
     ]
 
+def get_path():
+    '''获取加载json的路径'''
+    user_file = pathlib.Path(__file__).parent.parent.parent/r"settings/user_config.json"
+    if user_file.exists():
+        return user_file
+    else:
+        return pathlib.Path(__file__).parent.parent.parent/r"settings/default_config.json"
 
 class CaseSensitiveConfigParser(configparser.ConfigParser):
     """继承ConfigParser，覆盖optionxform方法以保持选项名原样"""
@@ -38,7 +47,10 @@ class ImageClassifier:
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
         self.model.eval()
         self.model = self.model.to(self.device)
-        self.label_mapping = load_clip_label_mapping()
+        with open(get_path(), 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        self.label_mapping = data['CLIP_LABELS']
+        print(self.label_mapping)
         # 获取分词器
         self.tokenizer = open_clip.get_tokenizer(model_name)
         self.text_labels= [it for it in self.label_mapping]
@@ -110,21 +122,21 @@ class ImageClassifier:
         return vis, label, conf, label_id
 
 
-def load_clip_label_mapping(config_path=r'Lib\config.ini'):
-    cfg = CaseSensitiveConfigParser()
-    cfg.read(config_path, encoding='utf-8')
-    if 'CLIP_LABELS' not in cfg:
-        print("[警告] 未找到 [CLIP_LABELS] 配置，无法加载 CLIP 标签与ID映射")
-        return {}
-    clip_section = cfg['CLIP_LABELS']
-    clip_label_to_id = {}
-    for label_text, id_str in clip_section.items():
-        try:
-            clip_label_to_id[label_text] = int(id_str.strip())  # 保持label_text原大小写
-        except ValueError:
-            print(f"[警告] CLIP 标签 '{label_text}' 的 ID 不是有效数字: {id_str}")
-    print("[INFO] 已加载 CLIP 标签与 ID 映射：")
-    return clip_label_to_id
+# def load_clip_label_mapping(config_path=r'Lib\config.ini'):
+#     cfg = CaseSensitiveConfigParser()
+#     cfg.read(config_path, encoding='utf-8')
+#     if 'CLIP_LABELS' not in cfg:
+#         print("[警告] 未找到 [CLIP_LABELS] 配置，无法加载 CLIP 标签与ID映射")
+#         return {}
+#     clip_section = cfg['CLIP_LABELS']
+#     clip_label_to_id = {}
+#     for label_text, id_str in clip_section.items():
+#         try:
+#             clip_label_to_id[label_text] = int(id_str.strip())  # 保持label_text原大小写
+#         except ValueError:
+#             print(f"[警告] CLIP 标签 '{label_text}' 的 ID 不是有效数字: {id_str}")
+#     print("[INFO] 已加载 CLIP 标签与 ID 映射：")
+#     return clip_label_to_id
 
 
 if __name__ == "__main__":

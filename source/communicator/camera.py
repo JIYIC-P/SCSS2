@@ -6,11 +6,11 @@ import json
 
 def get_path():
     '''获取加载json的路径'''
-    user_file = pathlib.Path(__file__).parent.parent.parent / "user_config.json"
+    user_file = pathlib.Path(__file__).parent.parent.parent/r"settings/user_config.json"
     if user_file.exists():
         return user_file
     else:
-        return pathlib.Path(__file__).parent.parent.parent / "default_config.json"
+        return pathlib.Path(__file__).parent.parent.parent/r"settings/default_config.json"
 class ThreadedCamera:
     """
     相机类，提供相机线程用于抓取图片和设置相机参数

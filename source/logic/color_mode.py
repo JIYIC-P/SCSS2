@@ -1,7 +1,5 @@
-# color_match.py
 import cv2
 import numpy as np
-import configparser
 import json
 import sys
 import pathlib
@@ -9,40 +7,42 @@ import pathlib
 from typing import List, Tuple, Optional
 
 # ========== 参数区（与主程序保持一致） ==========
-INI_PATH = r"Lib\config.ini"      # 含 [COLOR_RANGES] 字段
+INI_PATH = r"Lib\config.ini"  # 含 [COLOR_RANGES] 字段
 MAX_SIZE = 640
 RATE = 0.9
-PASS_SIZE = MAX_SIZE * RATE                 # 如需阈值可复用
-
-"""
-color_mode中颜色范围的保存不是我写的，是小辈写得
+PASS_SIZE = MAX_SIZE * RATE  # 如需阈值可复用
 
 
-"""
 def get_path():
     '''获取加载json的路径'''
-    user_file = pathlib.Path(__file__).parent.parent.parent /r"settings\user_config.json"
+    user_file = pathlib.Path(__file__).parent.parent.parent/r"settings/user_config.json"
     if user_file.exists():
         return user_file
     else:
-        return pathlib.Path(__file__).parent.parent.parent /r"settings\default_config.json"
+        return pathlib.Path(__file__).parent.parent.parent/r"settings/default_config.json"
+
+
 # ========== 工具函数（直接搬自原 Dialog.py） ==========
 def load_color_range() -> List[Tuple[List[int], List[int]]]:
     """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
     with open(get_path(), 'r', encoding='utf-8') as file:
         data = json.load(file)
     ranges_str = data['COLOR_RANGES']['ranges']
-    print(ranges_str)
-    # raw = json.loads(ranges_str)    
-    # print(raw)        # dict[str,list]
-    raw = {int(k): v for k, v in raw.items()}
-    return [raw[i] for i in range(5)]       # 顺序 0~4
+    raw = {int(k): v for k, v in ranges_str.items()}
+    print (raw)
+    result = []
+    for i in range(5):
+        base = raw[i][0]
+        offset = raw[i][1]
+        lower = [max(0, x - offset) for x in base]
+        upper = [x + offset for x in base]
+        result.append((lower, upper))
+    return result
 
 
 def hsv_in_range(average: List[float],
                  lower: List[int],
                  upper: List[int]) -> bool:
-
     I = 0
     if len(average) > 0:
         if lower[0] <= average[0] <= upper[0]:
@@ -88,6 +88,7 @@ def match_color(frame: np.ndarray,
 
     vis = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     hsv_avg = segment_one(vis)
+    hsv_avg=[5,250,170]
     color_id = detect_color_by_hsv(hsv_avg, ranges)
     return vis, hsv_avg, color_id
 
@@ -95,7 +96,7 @@ def match_color(frame: np.ndarray,
 # ====================== 单张图片测试 =======================
 if __name__ == "__main__":
     import sys
-    from pathlib import Path  
+    from pathlib import Path
     root = Path(__file__).resolve().parent.parent
     sys.path.insert(0, str(root))
 
@@ -118,4 +119,3 @@ if __name__ == "__main__":
         if cv2.waitKey(1) & 0xFF == ord('q'):
             camera.close_cam()
             break
-
