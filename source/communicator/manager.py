@@ -5,7 +5,7 @@ sys.path.insert(0, str(root))
 
 
 import communicator.camera as camera
-import source.communicator.pcie as pcie
+import communicator.pcie as pcie
 import communicator.mbs as mbs
 import communicator.tcp as hhit
 
@@ -57,7 +57,7 @@ class manager():
             self.pcie.start() #启动板卡读线程
             if self.mode in ('clip', 'yolo'): 
                 self.camera0 = camera.ThreadedCamera(0)
-                self.camera1=camera.ThreadedCamera(0)
+                self.camera1=camera.ThreadedCamera(1)
                 self.camera0.init_camera()     #打开一号相机 
                 self.camera1.init_camera()     #打开二号相机  
                 
