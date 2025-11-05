@@ -12,8 +12,8 @@ from common.config_manager import ConfigManager
 app = QApplication(sys.argv)
 
 # 1. 配置
-cfg = ConfigManager()
-
+#cfg = ConfigManager()
+cfg = None
 # 2. 主窗口（主线程）
 win = MainWindowLogic()
 win.show()

@@ -5,7 +5,7 @@ sys.path.insert(0, str(root))
 
 
 import communicator.camera as camera
-import communicator.FY5400 as pcie
+import source.communicator.pcie as pcie
 import communicator.mbs as mbs
 import communicator.tcp as hhit
 
@@ -53,7 +53,7 @@ class manager():
         判断哪个mode，哪个mode需要哪些通信方式
         """
         if self.mode is not None:
-            self.pcie=pcie.FY5400IO(0)
+            self.pcie=pcie.PcIeIO(0)
             self.pcie.start() #启动板卡读线程
             if self.mode in ('clip', 'yolo'): 
                 self.camera0 = camera.ThreadedCamera(0)

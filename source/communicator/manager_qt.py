@@ -1,11 +1,13 @@
 import sys
-from pathlib import Path  
+from pathlib import Path
+
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QTimer
-from communicator import camera, FY5400, tcp as hhit
+from communicator import camera, tcp as hhit
 from common.data_bus import DataBus
+from communicator import pcie  
 
 class CommManager(QObject):
     def __init__(self, cfg):
@@ -31,7 +33,7 @@ class CommManager(QObject):
     # ---------- 启动/停止 ----------
     def start(self):
         if self.mode is None: return
-        self.pcie = FY5400.FY5400IO(0)
+        self.pcie = pcie.PcIeIO(0)
         self.pcie.start()
         if self.mode in ('clip', 'yolo'):
             self.camera0 = camera.ThreadedCamera(0)

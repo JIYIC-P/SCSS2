@@ -1,11 +1,14 @@
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import QMainWindow
 from Ui.main_window import Ui_MainWindow
 from common.data_bus import DataBus
 
-class MainWindowLogic(Ui_MainWindow):
-    def __init__(self, parent=None):
-        super().setupUi(parent)
+class MainWindowLogic(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)   # self 就是 QMainWindow 实例
         self.bus = DataBus()
         # 绑定信号
         self.bus.pcie_di_update.connect(self.update_di_lcd)
@@ -13,8 +16,8 @@ class MainWindowLogic(Ui_MainWindow):
         self.bus.algo_result.connect(self.update_result_table)
         self.bus.push_rods.connect(self.update_do_led)
         # 用户交互
-        self.comboBox_mode.currentTextChanged.connect(self.bus.mode_changed)
-        self.pushButton_push5.clicked.connect(lambda: self.bus.manual_cmd.emit(0x1F))
+        #self.comboBox_mode.currentTextChanged.connect(self.bus.mode_changed)
+        #self.pushButton_push5.clicked.connect(lambda: self.bus.manual_cmd.emit(0x1F))
 
     @pyqtSlot(int)
     def update_di_lcd(self, di):

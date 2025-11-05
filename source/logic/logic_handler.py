@@ -24,7 +24,7 @@ def cut_img(frame,x,width,y,height):
 
 
 
-class updater():
+class Updater():
     """
     fix
     此类用于将四个模式的调用封装到一起，提供一个update函数，此函数用于更新
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     com_manager = manager()
     com_manager.setmode("color")
 
-    u1=updater(com_manager)
+    u1=Updater(com_manager)
     u1.setmode("color")
     t1 = time.time()
     

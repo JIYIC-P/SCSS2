@@ -42,7 +42,7 @@ dll = windll.LoadLibrary(r"Lib\FY5400.dll")
 
     
 #     return status 
-class FY5400IO:
+class PcIeIO:
     """
     16位并行IO卡线程安全封装
     提供：
@@ -183,7 +183,7 @@ class FY5400IO:
 
 # ---------------- 简单测试 ----------------
 if __name__ == "__main__":
-    io = FY5400IO()          # 打开板卡
+    io = PcIeIO()          # 打开板卡
     io.set_do(0x0000)
     try:
         # for i in range(1):  # 跑1秒
