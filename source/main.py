@@ -6,14 +6,14 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread
 from Ui.main_window_logic import MainWindowLogic
 from communicator.manager_qt import CommManager
-from source.logic.logic_handler_qt import LogicWorker
+from logic.logic_handler_qt import LogicWorker
 from common.config_manager import ConfigManager
 
 app = QApplication(sys.argv)
 
 # 1. 配置
-#cfg = ConfigManager()
-cfg = None
+cfg = ConfigManager()
+
 # 2. 主窗口（主线程）
 win = MainWindowLogic()
 win.show()

@@ -9,7 +9,7 @@ from communicator import camera, tcp as hhit
 from common.data_bus import DataBus
 from communicator import pcie  
 
-class CommManager(QObject):
+class ManagerQt(QObject):
     def __init__(self, cfg):
         super().__init__()
         self.cfg  = cfg

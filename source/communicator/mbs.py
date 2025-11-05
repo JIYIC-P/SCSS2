@@ -5,7 +5,7 @@ import time
 import threading
 
 
-class MBUS():
+class ModBus():
     """
     此类用于基于串口的modbus通信，该通信方法暂时弃用：
     后续修改请只保留通信部分，只保留读取寄存器和写入线圈两个部分，
