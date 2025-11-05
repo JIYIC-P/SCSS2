@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread
 from Ui.main_window_logic import MainWindowLogic
 from communicator.manager_qt import CommManager
-from logic.logic_worker import LogicWorker
+from source.logic.logic_handler_qt import LogicWorker
 from common.config_manager import ConfigManager
 
 app = QApplication(sys.argv)

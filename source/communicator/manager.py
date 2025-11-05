@@ -5,7 +5,7 @@ sys.path.insert(0, str(root))
 
 
 import communicator.camera as camera
-import source.communicator.pcie as pcie
+import communicator.pcie as pcie
 import communicator.mbs as mbs
 import communicator.tcp as hhit
 
