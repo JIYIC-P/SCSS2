@@ -15,7 +15,6 @@ class ClassifierReceiver:
     让其专注于通信，也即每一帧回调后仅作统计，并更新统计后的数据，
     提供一个方法用于获取当前帧的统计结果，数据类型要求为整数列表
     """
-    #def __init__(self, on_transform_data: Optional[Callable[[list], None]] = None):
     def __init__(self):
     
         # DLL 路径，需替换为你实际的 DLL 所在路径

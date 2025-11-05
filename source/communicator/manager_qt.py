@@ -58,15 +58,3 @@ class ManagerQt(QObject):
             self.camera1.close_cam()
         if self.hhit:
             self.hhit.stop()
-
-    # ---------- 轮询 DI ----------
-    def __poll_di(self):
-        if self.pcie:
-            di = self.pcie.get_di()
-            self.bus.pcie_di_update.emit(di)
-
-    # ---------- 前端下达 DO ----------
-    @pyqtSlot(int)
-    def set_do(self, do):
-        if self.pcie:
-            self.pcie.set_do(do)
