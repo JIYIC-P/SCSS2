@@ -1,7 +1,16 @@
 import cv2
 from threading import Thread
 import time
+import pathlib
+import json
 
+def get_path():
+    '''获取加载json的路径'''
+    user_file = pathlib.Path(__file__).parent.parent.parent / "user_config.json"
+    if user_file.exists():
+        return user_file
+    else:
+        return pathlib.Path(__file__).parent.parent.parent / "default_config.json"
 class ThreadedCamera:
     """
     相机类，提供相机线程用于抓取图片和设置相机参数
@@ -21,12 +30,18 @@ class ThreadedCamera:
         self.source = source
         self._running = True  # 控制线程运行的标志
 
+
+        with open(get_path(), 'r', encoding='utf-8') as file:
+            print(file)
+            data = json.load(file)
         # 相机参数
-        self.fps = 50
-        self.exposure = -6
-        self.resolution = [1920, 1080]
-        self.brightness = 100
-        self.contrast = 50
+        self.fps = data.get("camera", {}).get("fps", 50)
+        self.exposure = data.get("camera", {}).get("exposure", -6)
+        self.resolution = data.get("camera", {}).get("resolution", [1920, 1080])
+        self.brightness = data.get("camera", {}).get("brightness", 100)
+        self.contrast = data.get("camera", {}).get("contrast", 50)
+
+        
 
     def init_camera(self):
         """

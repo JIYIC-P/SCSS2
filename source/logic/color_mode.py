@@ -4,6 +4,8 @@ import numpy as np
 import configparser
 import json
 import sys
+import pathlib
+
 from typing import List, Tuple, Optional
 
 # ========== 参数区（与主程序保持一致） ==========
@@ -17,13 +19,22 @@ color_mode中颜色范围的保存不是我写的，是小辈写得
 
 
 """
+def get_path():
+    '''获取加载json的路径'''
+    user_file = pathlib.Path(__file__).parent.parent.parent /r"settings\user_config.json"
+    if user_file.exists():
+        return user_file
+    else:
+        return pathlib.Path(__file__).parent.parent.parent /r"settings\default_config.json"
 # ========== 工具函数（直接搬自原 Dialog.py） ==========
-def load_color_range(ini_path: str = INI_PATH) -> List[Tuple[List[int], List[int]]]:
+def load_color_range() -> List[Tuple[List[int], List[int]]]:
     """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
-    cfg = configparser.ConfigParser()
-    cfg.read(ini_path, encoding='utf-8')
-    ranges_str = cfg['COLOR_RANGES']['ranges']
-    raw = json.loads(ranges_str)            # dict[str,list]
+    with open(get_path(), 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    ranges_str = data['COLOR_RANGES']['ranges']
+    print(ranges_str)
+    # raw = json.loads(ranges_str)    
+    # print(raw)        # dict[str,list]
     raw = {int(k): v for k, v in raw.items()}
     return [raw[i] for i in range(5)]       # 顺序 0~4
 
@@ -31,7 +42,7 @@ def load_color_range(ini_path: str = INI_PATH) -> List[Tuple[List[int], List[int
 def hsv_in_range(average: List[float],
                  lower: List[int],
                  upper: List[int]) -> bool:
-    """原封不动摘自原代码"""
+
     I = 0
     if len(average) > 0:
         if lower[0] <= average[0] <= upper[0]:

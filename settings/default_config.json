@@ -1,0 +1,42 @@
+{
+    "camera": {
+      "fps": 45,
+      "exposure":-6,
+      "resolution" :[1900, 1080],
+      "brightness": 100,
+      "contrast" : 50
+    },
+    "COLOR_RANGES": {
+        "ranges": {
+            "0": [[5.38, 250.5, 172.1], 5],
+            "1": [[98.91, 203.94, 165.63],5],
+            "2": [[105.83, 52.26, 186.77],5],
+            "3": [[6, 246.6, 183.57], 5],
+            "4": [[95.29, 80.7, 249.07], 5]
+        }
+    },
+    "CLIP_LABELS": {
+        "T-shirt": 0,
+        "black clothing": 1,
+        "winter clothing": 2,
+        "summer clothing": 3,
+        "plush toy": 4,
+        "down jacket": 5,
+        "wallet": 6,
+        "sweater": 7,
+        "leggings": 8,
+        "underwear": 9,
+        "shoe": 10,
+        "dress": 11
+    },
+    "HHIT_LABELS": {
+        "涤": 0,
+        "90涤": 1,
+        "50涤": 2,
+        "棉": 3,
+        "90棉": 4,
+        "50棉": 5,
+        "其它": 6
+    }
+}
+  
