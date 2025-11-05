@@ -1,7 +1,7 @@
 # SCSS2 智能服装分拣系统 V2 技术文档  
 **版本**：v2.0  
 **作者**：疾轶辰  
-**更新时间**：2024-05-20  
+**更新时间**：2024-11-5  
 **仓库地址**：https://github.com/JIYIC-P/SCSS2
 
 
@@ -37,7 +37,7 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 │   │   └── pcie.py             # PCIE IO板卡(DLL库调用)  
 │   │  
 │   └── logic/                  # 核心算法模块  
-│       ├── logic_handler.py    # 处理接口定义（update()） 
+│       ├── logic_handler.py    # 处理接口定义update()   
 │       ├── color_mode.py       # 颜色模式（OpenCV-Python 处理 HSV 均值）  
 │       ├── clip_mode.py        # 形状模式  --clip  
 │       ├── yolo_mode.py        # 形状模式  --yolo  
@@ -47,7 +47,7 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 ├── Ui/                         # 桌面端 GUI（Python + PyQt5）  
 │   ├── windows/                # 窗口组件  
 │   │   └── main_window.py      # 主窗口（QMainWindow）  
-│   └── resources/              # 静态资源  
+│   └── resources/              # 静态资源    
 │       ├── icons/              # 图标（.ico/.png）  
 │       └── styles/             # 样式表（.qss）  
 │                  
