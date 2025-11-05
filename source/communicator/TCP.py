@@ -1,3 +1,5 @@
+# tcp.py 需要是小写
+
 import ctypes
 from ctypes import *
 import threading
@@ -5,6 +7,7 @@ from numpy.ctypeslib import as_array
 
 MAX_ARRY_LENGTH=6#最大数值长度
 class ClassifierReceiver:
+    
     """
     现有
     此类用于接受来自其它tcp客户端的数据，数据格式为640*(float),numpy
