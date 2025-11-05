@@ -91,7 +91,7 @@ class PcIeIO:
         now = time.time()
         out = [0] * 6
         changed = (di ^ self._di_prve) & 0x3F   # 只拿低六位进行判断
-        print("in，prve，change：",di,self._di_prve,changed)
+        
         if not changed:
             return out
 
@@ -99,8 +99,8 @@ class PcIeIO:
             mask = 1 << bit
             if not (changed & mask):
                 continue                     # 该位没跳变
-            if now - self._last_tm[bit] < self.debounce:
-                continue                     # 还在抖动期
+            # if now - self._last_tm[bit] < self.debounce:
+            #     continue                     # 还在抖动期
 
             # 正式记录这次变化
             self._last_tm[bit] = now
@@ -143,7 +143,7 @@ class PcIeIO:
         O: 16位DI数据
         """
         with self._lock:
-            print(int(self._di_cache))
+       
             return int(self._di_cache)#返回16进制数
 
     def set_do(self, value: int):
@@ -156,7 +156,7 @@ class PcIeIO:
         with self._lock:
             if value != self._do_cache:          # 减少无意义写
                 dll.FY5400_DO(self.hDev, value) 
-                print(value) # 真正写硬件,写入十进制int
+                # print(value) # 真正写硬件,写入十进制int
                 self._do_cache = value           # 更新缓存
 
     def close(self):
@@ -164,7 +164,7 @@ class PcIeIO:
         self.stop()                       # 先停线程
         dll.FY5400_CloseDevice(self.hDev)
 
-    # ---------------- 内部实现 ----------------
+    # ---------------- 内部实现 ----------------s
     def _worker(self, interval: float):
         """
         FUNC:后台线程函数：循环读DI
