@@ -58,25 +58,6 @@ class colorClass:
         return False
 
 
-<<<<<<< HEAD
-
-
-def load_color_range() -> List[Tuple[List[int], List[int]]]:
-    """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
-    with open(get_path(), 'r', encoding='utf-8') as file:
-        data = json.load(file)
-    ranges_str = data['COLOR_RANGES']['ranges']
-    raw = {int(k): v for k, v in ranges_str.items()}
-    print (raw)
-    result = []
-    for i in range(5):
-        base = raw[i][0]
-        offset = raw[i][1]
-        lower = [max(0, x - offset) for x in base]
-        upper = [x + offset for x in base]
-        result.append((lower, upper))
-    return result
-=======
     def detect_color_by_hsv(self,hsv_list: List[float],
                             ranges: List[Tuple[List[int], List[int]]]) -> Optional[int]:
         """返回 1~5 表示匹配到的颜色编号，无匹配返回 None"""
@@ -84,7 +65,6 @@ def load_color_range() -> List[Tuple[List[int], List[int]]]:
             if self.hsv_in_range(hsv_list, lower, upper):
                 return idx + 1
         return None
->>>>>>> 88bd4e0fe0984b9f080a06d22c29693e02415564
 
 
     def segment_one(self,img_in: np.ndarray) -> List[float]:
