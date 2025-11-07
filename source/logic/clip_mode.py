@@ -30,7 +30,7 @@ class CaseSensitiveConfigParser(configparser.ConfigParser):
         return optionstr  # 不将选项名转换为小写
     
 
-class ImageClassifier:
+class clipClass:
     def __init__(self, model_name='ViT-SO400M-16-SigLIP2-512', pretrained='webli',data=None):
         """
         初始化分类器，加载模型、分词器、预处理和文本标签。
@@ -140,7 +140,7 @@ if __name__ == "__main__":
             "shoe": 10,
             "dress": 11
         }
-    classifier = ImageClassifier()
+    classifier = clipClass()
     img_path = r"C:\Users\14676\Desktop\new_env\shoe\imgs\2025-10-16-13-43-33.png"
     frame = cv2.imread(img_path)
     frame0 = frame.copy()

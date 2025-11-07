@@ -5,10 +5,10 @@ sys.path.insert(0, str(root))
 
 
 
-import logic.yolo_mode as yolo_mode
-import logic.color_mode as color_mode
-import logic.clip_mode as clip_mode
-import logic.hhit_mode as hhit_mode
+from logic.yolo_mode import yoloClass as yolo_mode
+from logic.color_mode import colorClass as color_mode
+from logic.clip_mode import clipClass as clip_mode
+from logic.hhit_mode import hhitClass as hhit_mode
 
 import random
 
@@ -194,10 +194,10 @@ class Updater():
 if __name__ == "__main__":
     from communicator.manager import manager
     com_manager = manager()
-    com_manager.setmode("yolo")
+    com_manager.setmode("color")
 
     u1=Updater(com_manager)
-    u1.setmode("yolo")
+    u1.setmode("color")
     t1 = time.time()
     
     while time.time() - t1 < 10:
