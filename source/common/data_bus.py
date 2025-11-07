@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSignal
+from common.config_manager import ConfigManager
 
 class DataBus(QObject):
     # ========= 前端 → 后台 =========
@@ -14,6 +15,8 @@ class DataBus(QObject):
     # ========= 逻辑 → 前端 =========
     algo_result      = pyqtSignal(dict)         # 识别结果
     push_rods        = pyqtSignal(int)          # 实际下发的 DO
+    
+    cfg = ConfigManager()
 
     # 单例
     _instance = None

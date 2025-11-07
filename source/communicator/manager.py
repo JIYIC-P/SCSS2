@@ -31,21 +31,21 @@ tcp回调函数，复用
 
 
 
-class manager():
+class Manager():
 
-    def __init__(self):
+    def __init__(self,cfg):
         """
         传入模式，根据模式判断来创建和管理对象
         初始化若传入mode 则启动，否则创建none对象
         """
-
+        self.cfg = cfg
         self.camera0 = None
         self.camera1 = None
         self.pcie = None
         self.hhit = None
     
-    def setmode(self,mode):
-        self.mode = mode
+    def setmode(self):
+        self.mode = self.cfg.get('qt','config','mode')
         self.start()
 
     def start(self):
@@ -67,7 +67,7 @@ class manager():
                 
             elif self.mode=='hhit':
                 self.hhit= hhit.ClassifierReceiver()
-                self.hhit.start(server_ip="192.168.1.16", port=5555, rcv_buf_size=1000) #启动hhit接收640
+                self.hhit.start(server_ip=self.cfg.get('tcp','manager','ip'), port=self.cfg.get('tcp','manager','port'), rcv_buf_size=1000) #启动hhit接收640
                 
     def stop(self):
         """

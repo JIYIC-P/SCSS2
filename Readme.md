@@ -55,6 +55,156 @@ SCSS2-Smart-Clothing-Sort-System-V2/
 ├── .gitignore                  # Git 忽略配置（Python + PyQt）  
 ├── requirements.txt            # Python 依赖（后端 + 前端）  
 └── README.md                   # 项目简介（部署、使用说明）  
+
+```Mermaid
+sequenceDiagram
+    participant Main as main.py
+    participant DB as DataBus(单例)
+    participant UI as MainWindowLogic
+    participant CM as ConfigManager
+    participant CommThread as QThread(通信)
+    participant Manager as Manager(通信管理)
+    participant LogicThread as QThread(逻辑)
+    participant LogicWorker as LogicWorker(逻辑处理)
+    participant Updater as Updater(算法核心)
+
+    Note over Main: ========== 启动阶段 ==========
+    Main->>DB: DataBus() 获取单例
+    activate DB
+    DB->>CM: ConfigManager() 自动初始化
+    activate CM
+    CM-->>DB: 加载 user_config.json
+    deactivate CM
+    deactivate DB
+    
+    Main->>UI: MainWindowLogic()
+    activate UI
+    UI->>DB: DataBus() 获取单例引用
+    deactivate UI
+    
+    Main->>Manager: Manager(cfg) 创建实例
+    activate Manager
+    Manager->>CM: cfg.get('qt','config','mode')
+    CM-->>Manager: 返回配置
+    deactivate Manager
+    
+    Main->>CommThread: QThread() 创建
+    activate CommThread
+    Main->>Manager: moveToThread(comm_thread)
+    Main->>CommThread: start()
+    Note over Manager: 线程启动后<br/>Manager.setmode() 被调用
+    Manager->>Manager: 根据mode启动PCIe/Camera/TCP
+    deactivate CommThread
+    
+    Main->>LogicWorker: LogicWorker(cfg) 创建
+    activate LogicWorker
+    LogicWorker->>DB: DataBus() 获取单例
+    LogicWorker->>Updater: Updater(self.comm)
+    activate Updater
+    deactivate Updater
+    deactivate LogicWorker
+    
+    Main->>LogicThread: QThread() 创建
+    activate LogicThread
+    Main->>LogicWorker: logic_mgr.comm = comm_mgr 注入Manager
+    Main->>LogicWorker: moveToThread(logic_thread)
+    Main->>LogicThread: start()
+    LogicThread->>LogicWorker: QTimer启动 50ms周期
+    deactivate LogicThread
+    
+    Main->>DB: bus.mode_changed.connect(...)
+    Main->>DB: bus.manual_cmd.connect(...)
+    Note over Main: 所有跨线程信号连接完成
+    
+    Main->>UI: win.show()
+    Note over UI: 进入 Qt 事件循环
+    
+    Note over Main: ========== 运行阶段 ==========
+    loop 每50ms周期
+        LogicWorker->>Updater: update()
+        Updater->>Manager: getdata() 直接调用
+        Manager-->>Updater: 返回传感器数据/图像
+        Updater->>Updater: 执行算法识别
+        Updater->>Manager: set_do() 直接推杆控制
+        LogicWorker->>DB: algo_result.emit()
+        LogicWorker->>DB: push_rods.emit()
+    end
+    
+    loop 通信事件触发
+        Manager->>DB: pcie_di_update.emit(di)
+        Manager->>DB: camera0_img.emit(img)
+        DB->>UI: update_di_lcd()
+        DB->>UI: set_cam0_label()
+    end
+    
+    Note over Main: ========== 退出阶段 ==========
+    Main->>Manager: stop()
+    Main->>Updater: __cycle.stop()
+    Main->>CommThread: quit() + wait()
+    Main->>LogicThread: quit() + wait()
+```
+```Mermaid
+graph TB
+    subgraph 前端主线程
+        UI[MainWindowLogic<br/>前端界面]
+        DB[DataBus<br/>信号总线 + 配置容器]
+        UI -- "持有引用" --> DB
+    end
+
+    subgraph 通信线程
+        MAN[Manager<br/>硬件通信管理]
+        PCIE[PCIe I/O]
+        CAM0[Camera 0]
+        CAM1[Camera 1]
+        HHIT[TCP/HHIT Receiver]
+        MAN --> PCIE
+        MAN --> CAM0
+        MAN --> CAM1
+        MAN --> HHIT
+    end
+
+    subgraph 逻辑线程
+        LW[LogicWorker<br/>逻辑调度器]
+        UPD[Updater<br/>算法处理核心]
+        LW --> UPD
+    end
+
+    subgraph 配置管理
+        CM[ConfigManager<br/>json配置读写]
+        DB -.-> CM
+        MAN -.-> CM
+        LW -.-> CM
+    end
+
+    %% 信号流向 (实线)
+    UI -- "1. 用户操作<br/>mode_changed.emit" --> DB
+    UI -- "2. 手动推杆<br/>manual_cmd.emit" --> DB
+    
+    DB -- "3. 跨线程信号<br/>set_mode(mode)" --> MAN
+    DB -- "4. 跨线程信号<br/>set_mode(mode)" --> LW
+    DB -- "5. 跨线程信号<br/>set_do(cmd)" --> MAN
+    
+    MAN -- "6. 数据更新<br/>pcie_di_update.emit(di)" --> DB
+    MAN -- "7. 图像数据<br/>camera0_img.emit(img)" --> DB
+    UPD -- "8. 识别结果<br/>algo_result.emit(dict)" --> DB
+    UPD -- "9. 推杆状态<br/>push_rods.emit(int)" --> DB
+    
+    DB -- "10. 界面刷新<br/>update_di_lcd()" --> UI
+    DB -- "11. 图像显示<br/>set_cam0_label()" --> UI
+    DB -- "12. 结果显示<br/>update_result_table()" --> UI
+    DB -- "13. 状态指示<br/>update_do_led()" --> UI
+    
+    %% 直接调用 (虚线)
+    LW -- "14. 注入引用<br/>logic_mgr.comm = MAN" --> MAN
+    UPD -- "15. 获取数据<br/>Manager.getdata()" --> MAN
+    UPD -- "16. 硬件控制<br/>Manager.set_do()" --> MAN
+    
+    style DB fill:#f9f,stroke:#333,stroke-width:2px
+    style UPD fill:#bbf,stroke:#333,stroke-width:2px
+    style MAN fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+
 ## 三、核心模块说明（Python + PyQt 适配）
 ### 3.1 后端（Python）
 #### 3.1.1 通信层

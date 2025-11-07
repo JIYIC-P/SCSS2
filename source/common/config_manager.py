@@ -9,26 +9,22 @@ class ConfigManager:
         with self._lock:
             self._user_file = pathlib.Path(__file__).parent.parent.parent / r"settings/user_config.json"  # 用户配置信息
             self._default_file = pathlib.Path(__file__).parent.parent.parent / r"settings\default_config.json"  # 默认配置信息
-            self._cfg = json.loads(self._default_file.read_text(encoding='utf-8'))
+            if self._user_file.exists():
+                self._cfg = json.loads(self._user_file.read_text(encoding='utf-8'))
+            else:
+                self._cfg = json.loads(self._default_file.read_text(encoding='utf-8'))
 
     def get(self, *keys, default=None):
-        with self._lock:
-            # 决定加载哪个配置文件
-            if self._user_file.exists():
-                cfg = json.loads(self._user_file.read_text(encoding='utf-8'))
-            else:
-                cfg = json.loads(self._default_file.read_text(encoding='utf-8'))
-
-            # 逐层获取值
-            try:
-                value = cfg
-                for key in keys:
-                    value = value[key]
-                return value
-            except (KeyError, TypeError):
-                # KeyError: 某个 key 不存在
-                # TypeError: value 不是字典，不能继续用 key 索引（比如 value 是字符串，却还想用 ['a'] 访问）
-                return default
+        # 逐层获取值
+        try:
+            value = self._cfg
+            for key in keys:
+                value = value[key]
+            return value
+        except (KeyError, TypeError):
+            # KeyError: 某个 key 不存在
+            # TypeError: value 不是字典，不能继续用 key 索引（比如 value 是字符串，却还想用 ['a'] 访问）
+            return default
 
     def set(self, key1, key2,key3, value):
         with self._lock:
