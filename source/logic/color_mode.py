@@ -6,16 +6,30 @@ import pathlib
 
 from typing import List, Tuple, Optional
 
+import sys
+from pathlib import Path  
+root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root))
+
+from common.config_manager import ConfigManager
+
 # ========== 参数区（与主程序保持一致） ==========
 
 class colorClass:
 
     def __init__(self,data=None):
-        self.data = data
+        #self.data = data
+        self.cfg=ConfigManager()
+        
+        if data is not None:
+            self.data = data
+        else:
+            self.data=self.cfg.get("color_mode","ranges")
     # ========== 工具函数（直接搬自原 Dialog.py） ==========
     def load_color_range(self) -> List[Tuple[List[int], List[int]]]:
         """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
-        ranges_str = self.data["color_mode"]['ranges']
+        ranges_str = self.data
+        print(self.data)
         raw = {int(k): v for k, v in ranges_str.items()}
         print (raw)
         result = []
@@ -96,7 +110,7 @@ if __name__ == "__main__":
     t1 = time.time()
     with open(r"C:\Users\14676\Desktop\SCSS2\settings\default_config.json", 'r', encoding='utf-8') as file:
         data = json.load(file)
-    test1=colorClass(data=data)
+    test1=colorClass()
     while t1 - t < 10:
         t1 = time.time()
 
