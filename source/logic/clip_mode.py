@@ -6,8 +6,14 @@ from PIL import Image
 from typing import List, Tuple, Optional,Dict
 import torch
 import json
-import pathlib
 import open_clip
+
+import sys
+from pathlib import Path  
+root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root))
+
+from common.config_manager import ConfigManager
 
 
 MY_TEXT_LABELS = [
@@ -41,8 +47,8 @@ class ImageClassifier:
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
         self.model.eval()
         self.model = self.model.to(self.device)
-        
-        self.label_mapping = data
+        if data is None:
+            self.label_mapping = data
         print(self.label_mapping)
         # 获取分词器
         self.tokenizer = open_clip.get_tokenizer(model_name)
@@ -113,23 +119,6 @@ class ImageClassifier:
         label, conf = self.predict(pil_image)   # 返回 (str, float)
         label_id = self.label_mapping.get(label, -1)       # 找不到给 -1
         return vis, label, conf, label_id
-
-
-# def load_clip_label_mapping(config_path=r'Lib\config.ini'):
-#     cfg = CaseSensitiveConfigParser()
-#     cfg.read(config_path, encoding='utf-8')
-#     if 'CLIP_LABELS' not in cfg:
-#         print("[警告] 未找到 [CLIP_LABELS] 配置，无法加载 CLIP 标签与ID映射")
-#         return {}
-#     clip_section = cfg['CLIP_LABELS']
-#     clip_label_to_id = {}
-#     for label_text, id_str in clip_section.items():
-#         try:
-#             clip_label_to_id[label_text] = int(id_str.strip())  # 保持label_text原大小写
-#         except ValueError:
-#             print(f"[警告] CLIP 标签 '{label_text}' 的 ID 不是有效数字: {id_str}")
-#     print("[INFO] 已加载 CLIP 标签与 ID 映射：")
-#     return clip_label_to_id
 
 
 if __name__ == "__main__":
