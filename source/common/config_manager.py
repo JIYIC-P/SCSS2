@@ -42,6 +42,6 @@ class ConfigManager:
             self._user_file.write_text(json.dumps(self._cfg, indent=2), encoding='utf-8')
 if __name__ == '__main__':
     cfg = ConfigManager()
-    value={"pt":"aaa"}
-    cfg.set("yolo_mode", "path", value=value)
-    print(cfg.get("yolo_mode"))
+    value="aab"
+    cfg.set("mode", value=value)
+    print(cfg.get("qt"))

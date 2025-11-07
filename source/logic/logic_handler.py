@@ -10,6 +10,8 @@ from logic.color_mode import colorClass as color_mode
 from logic.clip_mode import clipClass as clip_mode
 from logic.hhit_mode import hhitClass as hhit_mode
 
+from common.data_bus import DataBus
+
 import random
 
 import time
@@ -54,7 +56,9 @@ class Updater():
         self.obj=[0,0,0,0,0] #物品,暂时命名，具体含义是存放衣服序列的变化
         #每个工位创建一个队列，存放要推的衣服顺序序列
         self.count_worker_queues=[[],[],[],[],[]]
-       
+        
+        self.bus=DataBus()
+        self.bus.mode_changed.connect(self.send_order)
 
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
 
@@ -76,11 +80,15 @@ class Updater():
         self.pcie_status=self.com_model.pcie.status_judg(3)
         if self.com_model.mode in ('clip', 'yolo'): 
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
+            self.bus.camera0_img.emit(self.frame0)  #发射相机一数据
             self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
+            self.bus.camera1_img.emit(self.frame0)  #发射相机一数据
         elif self.com_model.mode=='color':
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
+            self.bus.camera0_img.emit(self.frame0)  #发射相机一数据
         elif self.com_model.mode=='hhit':
             self.hhit_signal=self.com_model.hhit.float_array_np.copy() #获取原始hhit信息
+            self.bus.hhit_data.emit(self.hhit_signal)  #发送hhit信号
 
 
     def setmode(self,mode):
@@ -146,7 +154,7 @@ class Updater():
         result= self.Judgment()
         if result is not None:
             ORDER = self.generate_order(result)
-            print(ORDER)
+            self.bus.push_rods.emit(ORDER)#  发送控制指令信息
             self.send_order(ORDER)
 
 
@@ -161,6 +169,7 @@ class Updater():
                 _, ID, _ = yolo_mode().match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
                 self.count+=1
+                self.bus.algo_result.emit({"ID": ID, "count": self.count})
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
@@ -169,6 +178,8 @@ class Updater():
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
+                self.bus.algo_result.emit({"ID": ID, "count": self.count})
+
                 return {"ID": ID, "count": self.count}
         if self.mode=='clip':
 
@@ -179,6 +190,8 @@ class Updater():
             frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
             _, _, _,ID =  clip_mode().match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
             self.count+=1
+            self.bus.algo_result.emit({"ID": ID, "count": self.count})
+
             return {"ID": ID, "count": self.count}
         if self.mode=='HHIT':
             if self.hhit_signal is None:
@@ -186,6 +199,7 @@ class Updater():
                 return
             ID,_=hhit_mode().match_hhit(self.hhit_signal)
             self.count+=1
+            self.bus.algo_result.emit({"ID": ID, "count": self.count})
             return {"ID": ID, "count": self.count}
 
             

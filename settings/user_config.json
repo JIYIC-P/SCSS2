@@ -1,7 +1,7 @@
 {
   "camera": {
     "config": {
-      "fps": 50,
+      "fps": 90,
       "exposure": -6,
       "resolution": [
         1900,
@@ -76,7 +76,7 @@
       "\u6da4": 0,
       "90\u6da4": 1,
       "50\u6da4": 2,
-      "\u68c9": 999,
+      "\u68c9": 3,
       "90\u68c9": 4,
       "50\u68c9": 5,
       "\u5176\u5b83": 6
@@ -95,7 +95,13 @@
   },
   "yolo_mode": {
     "path": {
-      "pt": "Lib\\best.pt"
+      "pt": "aabbba"
     }
-  }
+  },
+  "yolo": {
+    "path": {
+      "pt": "aaa"
+    }
+  },
+  "mode": "aab"
 }

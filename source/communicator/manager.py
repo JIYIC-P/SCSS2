@@ -8,6 +8,8 @@ import communicator.camera as camera
 import communicator.pcie as pcie
 import communicator.mbs as mbs
 import communicator.tcp as hhit
+from common.data_bus import DataBus
+
 
 
 '''
@@ -33,19 +35,21 @@ tcp回调函数，复用
 
 class Manager():
 
-    def __init__(self,cfg):
+    def __init__(self):
         """
         传入模式，根据模式判断来创建和管理对象
         初始化若传入mode 则启动，否则创建none对象
         """
-        self.cfg = cfg
+        self.bus= DataBus()
         self.camera0 = None
         self.camera1 = None
         self.pcie = None
         self.hhit = None
+        self.bus.mode_changed.connect(self.setmode)
     
-    def setmode(self):
-        self.mode = self.cfg.get('qt','config','mode')
+    def setmode(self,mode):
+        self.mode = mode
+        self.bus.cfg.set("qt","config","mode",value=mode)
         self.start()
 
     def start(self):
@@ -67,7 +71,7 @@ class Manager():
                 
             elif self.mode=='hhit':
                 self.hhit= hhit.ClassifierReceiver()
-                self.hhit.start(server_ip=self.cfg.get('tcp','manager','ip'), port=self.cfg.get('tcp','manager','port'), rcv_buf_size=1000) #启动hhit接收640
+                self.hhit.start(server_ip=self.bus.cfg.get('tcp','manager','ip'), port=self.bus.cfg.get('tcp','manager','port'), rcv_buf_size=1000) #启动hhit接收640
                 
     def stop(self):
         """
