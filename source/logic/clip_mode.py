@@ -46,9 +46,12 @@ class ImageClassifier:
         # 加载模型和预处理
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(model_name, pretrained=pretrained)
         self.model.eval()
+        self.cfg=ConfigManager()
         self.model = self.model.to(self.device)
-        if data is None:
+        if data is not None:
             self.label_mapping = data
+        else:
+            self.label_mapping=self.cfg.get("clip_mode","labels")
         print(self.label_mapping)
         # 获取分词器
         self.tokenizer = open_clip.get_tokenizer(model_name)
@@ -137,7 +140,7 @@ if __name__ == "__main__":
             "shoe": 10,
             "dress": 11
         }
-    classifier = ImageClassifier(data=data)
+    classifier = ImageClassifier()
     img_path = r"C:\Users\14676\Desktop\new_env\shoe\imgs\2025-10-16-13-43-33.png"
     frame = cv2.imread(img_path)
     frame0 = frame.copy()
