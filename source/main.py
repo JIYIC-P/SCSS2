@@ -5,14 +5,11 @@ sys.path.insert(0, str(root))
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread
 from Ui.main_window_logic import MainWindowLogic
-from communicator.manager_qt import CommManager
-from source.logic.logic_handler_qt import LogicWorker
+from communicator.manager import CommManager
+from logic.logic_handler import LogicWorker
 from common.config_manager import ConfigManager
 
 app = QApplication(sys.argv)
-
-# 1. 配置
-#cfg = ConfigManager().get()
 cfg = None
 # 2. 主窗口（主线程）
 win = MainWindowLogic()
@@ -20,13 +17,13 @@ win.show()
 
 # 3. 通信线程
 comm_thread = QThread()
-comm_mgr  = CommManager(cfg)
+comm_mgr  = Manager()
 comm_mgr.moveToThread(comm_thread)
 comm_thread.start()
 
 # 4. 逻辑线程
 logic_thread = QThread()
-logic_mgr = LogicWorker(cfg)
+logic_mgr = Updater()
 logic_mgr.comm = comm_mgr   # 注入通信实例
 logic_mgr.moveToThread(logic_thread)
 logic_thread.start()
