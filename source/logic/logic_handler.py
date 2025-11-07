@@ -158,7 +158,7 @@ class Updater():
             if self.frame0 is not None and self.frame1 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-                _, ID, _ = yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
+                _, ID, _ = yolo_mode().match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
                 self.count+=1
                 return {"ID": ID, "count": self.count}
@@ -167,7 +167,7 @@ class Updater():
 
             if self.frame0 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
-                _,_,ID=color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
+                _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
                 return {"ID": ID, "count": self.count}
         if self.mode=='clip':
@@ -177,14 +177,14 @@ class Updater():
                 return
             frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
             frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-            _, _, _,ID =  clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
+            _, _, _,ID =  clip_mode().match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
             self.count+=1
             return {"ID": ID, "count": self.count}
         if self.mode=='HHIT':
             if self.hhit_signal is None:
                 print("[警告] 未接收到高光谱信息，无法执行后续操作")
                 return
-            ID,_=hhit_mode.match_hhit(self.hhit_signal)
+            ID,_=hhit_mode().match_hhit(self.hhit_signal)
             self.count+=1
             return {"ID": ID, "count": self.count}
 
