@@ -95,13 +95,19 @@
   },
   "yolo_mode": {
     "path": {
-      "pt": "aabbba"
+      "pt": "Lib\\best.pt"
     }
   },
-  "yolo": {
-    "path": {
-      "pt": "aaa"
-    }
-  },
-  "mode": "aab"
+  "YOLOworker": [
+    [
+      1,
+      3
+    ],
+    [
+      2
+    ],
+    [],
+    [],
+    []
+  ]
 }
