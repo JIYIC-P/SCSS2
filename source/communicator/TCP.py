@@ -116,6 +116,7 @@ class ClassifierReceiver:
         if isinstance(server_ip_bytes, str):  # 冗余判断，确保一定是 bytes
             server_ip_bytes = server_ip_bytes.encode('utf-8')
 
+        print(server_ip,port)
         # 调用 DLL 初始化
         success = self.init_func(
             server_ip_bytes,  # pServerIp

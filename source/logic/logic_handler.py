@@ -15,6 +15,7 @@ from common.config_manager import ConfigManager
 
 
 import time
+from threading import Thread
 
 
 import cv2
@@ -67,6 +68,7 @@ class Updater():
         self.obj=[0,0,0,0,0] #物品,暂时命名，具体含义是存放衣服序列的变化
         #每个工位创建一个队列，存放要推的衣服顺序序列
         self.count_worker_queues=[[],[],[],[],[]]
+        self.mode=None
         self.bus=DataBus()
 
         self.bus.mode_changed.connect(self.setmode)
@@ -77,6 +79,7 @@ class Updater():
 
         self._is_running = True
         self._sleep_time_ms = 100 / 1000.0  # 100ms => 0.1s
+        self.init_thread()
 
 
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
@@ -87,15 +90,19 @@ class Updater():
         while self._is_running:
             try:
                 self.update()
-                self.msleep(int(self._sleep_time_ms * 1000))  # 控制循环频率，如 100ms
+                time.sleep(0.1)
             except Exception as e:
                 print(f"[UpdaterThread] 运行出错: {e}")
                 break
 
+    def init_thread(self):
+            
+        self.thread = Thread(target=self.run, daemon=True)
+        self.thread.start()
+
     def stop(self):
         """安全停止线程的方法"""
         self._is_running = False
-        self.wait()  # 等待线程结束（可选）
 
 
     def get_data(self):
@@ -113,7 +120,7 @@ class Updater():
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
        
         self.bus.pcie_di_update.emit(self.pcie_signal)  #发射相机一数据
-        print("发送的pcie信息",self.bus.pcie_di_update)
+       
 
         self.pcie_status=self.com_model.pcie.status_judg(self.pcie_signal)
         if self.com_model.mode in ('clip', 'yolo'): 
@@ -216,7 +223,7 @@ class Updater():
                 '''这里应该返回，还没有结束'''
                 self.bus.camera0_img.emit(ndarray_to_qimage(frame))  #发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(ndarray_to_qimage(self.frame1))  #发射相机二元数据
-                print("发送的信息",self.bus.algo_result)
+                
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
@@ -297,9 +304,6 @@ if __name__ == "__main__":
 
     u1=Updater(com_manager)
     u1.setmode("color")
-    t1 = time.time()
-    
-    while time.time() - t1 < 10:
-        u1.update()
+ 
  
     

@@ -32,7 +32,7 @@ class colorClass:
     def load_color_range(self) -> List[Tuple[List[int], List[int]]]:
         """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
         ranges_str = self.data
-        print(self.data)
+        print("KKK")
         raw = {int(k): v for k, v in ranges_str.items()}
         result = []
         for i in range(5):
@@ -110,8 +110,7 @@ if __name__ == "__main__":
     camera.init_camera()
     t = time.time()
     t1 = time.time()
-    with open(r"C:\Users\14676\Desktop\SCSS2\settings\default_config.json", 'r', encoding='utf-8') as file:
-        data = json.load(file)
+  
     test1=colorClass()
     while t1 - t < 10:
         t1 = time.time()

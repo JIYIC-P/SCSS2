@@ -30,7 +30,7 @@ bus.mode_changed.connect(logic_mgr.setmode)
 #6. 退出时序
 def clean():
     comm_mgr.stop()
-    #logic_mgr.stop()
+    logic_mgr.stop()
     logic_mgr.__cycle.stop()
 app.aboutToQuit.connect(clean)
 

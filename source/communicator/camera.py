@@ -61,7 +61,6 @@ class ThreadedCamera:
             
             # 启动帧更新线程
             self.thread = Thread(target=self.update, daemon=True)
-            print("_____")
             self.thread.start()
 
         except Exception as e:
