@@ -108,7 +108,7 @@ class Updater():
 
     def setmode(self,mode):
         self.mode = mode
-        self.com_model.changemode(mode)
+        self.com_model.setmode(mode)
 
         if ConfigManager().get(f"{self.mode}worker") is not None:
             self.worker=ConfigManager().get(f"{self.mode}worker")
