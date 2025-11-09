@@ -78,7 +78,7 @@ class Updater():
         
 
         self._is_running = True
-        self._sleep_time_ms = 100 / 1000.0  # 100ms => 0.1s
+        self._sleep_time_ms = 10 / 1000.0  # 100ms => 0.1s
         self.init_thread()
 
 
@@ -90,7 +90,7 @@ class Updater():
         while self._is_running:
             try:
                 self.update()
-                time.sleep(0.1)
+                time.sleep(self._sleep_time_ms)
             except Exception as e:
                 print(f"[UpdaterThread] 运行出错: {e}")
                 break
@@ -227,15 +227,14 @@ class Updater():
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
-
             if self.frame0 is not None:
+
+
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
-                '''这里应该返回，还没有结束'''
                 self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
-
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
                 return {"ID": ID, "count": self.count}

@@ -63,6 +63,18 @@
           </item>
           <item>
            <widget class="QLabel" name="lab_ShowFrame0Pic">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>713</width>
+              <height>286</height>
+             </size>
+            </property>
             <property name="text">
              <string>frame0</string>
             </property>
@@ -77,6 +89,18 @@
           </item>
           <item>
            <widget class="QLabel" name="lab_ShowFrame1Pic">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>713</width>
+              <height>286</height>
+             </size>
+            </property>
             <property name="text">
              <string>frame1</string>
             </property>

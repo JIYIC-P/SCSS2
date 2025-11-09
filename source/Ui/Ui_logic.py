@@ -1,11 +1,12 @@
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QImage
 
 from PyQt5.QtWidgets import QMainWindow,QDialog
 from Ui.window_mian import Ui_MainWindow
 from common.data_bus import DataBus
 from Ui.widget_choose import Ui_Form
 from Ui.dialog_mode_change import Ui_modechange as Modechange
+import numpy as np
 
 
 
@@ -41,19 +42,30 @@ class MainWindowLogic(QMainWindow):
         self.ui.action_ToYoloMode.triggered.connect(self.changemode)
         self.ui.action_ToClipMode.triggered.connect(self.changemode)
         self.ui.action_ToHhitMode.triggered.connect(self.changemode)
-
         self.bus.camera0_img.connect(self.update_mianframe)
         self.bus.camera1_img.connect(self.update_secondframe)
-        # self.bus.pcie_di_update.connect(self.update_di_lcd)
-        # self.bus.camera0_img.connect(self.set_cam0_label)
-        # self.bus.algo_result.connect(self.update_result_table)
-        # self.bus.push_rods.connect(self.update_do_led)
 
-    def update_mianframe(self,frame:QPixmap):
-        print(000)
-        self.ui.lab_ShowFrame0Pic.setPixmap(frame)
-    def update_secondframe(self,frame:QPixmap):
-        self.ui.lab_ShowFrame1Pic.setPixmap(frame)
+
+    def ndarry2pixmap(self,array: np.ndarray):
+        height, width, channel = array.shape
+        bytes_per_line = width * channel
+        import cv2
+        rgb_array = cv2.cvtColor(array, cv2.COLOR_BGR2RGB)
+        qimage = QImage(
+            rgb_array.data,
+            width,
+            height,
+            bytes_per_line,
+            QImage.Format_RGB888  # 3通道 RGB 格式
+        )
+        pixmap = QPixmap.fromImage(qimage)
+
+        return pixmap
+    
+    def update_mianframe(self,array: np.ndarray):
+        self.ui.lab_ShowFrame0Pic.setPixmap(self.ndarry2pixmap(array))
+    def update_secondframe(self,array: np.ndarray):
+        self.ui.lab_ShowFrame1Pic.setPixmap(self.ndarry2pixmap(array))
 
     def changemode(self):
         action = self.sender()
