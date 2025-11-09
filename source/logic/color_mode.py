@@ -90,7 +90,7 @@ class colorClass:
         vis = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         hsv_avg = self.segment_one(vis)
         
-        color_id =self.detect_color_by_hsv(hsv_avg,self.ranges)
+        color_id =self.detect_color_by_hsv(hsv_avg,self.range)
         return vis, hsv_avg, color_id
 
 
