@@ -34,7 +34,7 @@ win.show()
 # bus.mode_changed.connect(logic_mgr.set_mode)
 # bus.manual_cmd.connect(comm_mgr.set_do)
 
-# # 6. 退出时序
+# 6. 退出时序
 # def clean():
 #     comm_mgr.stop()
 #     logic_mgr.__cycle.stop()

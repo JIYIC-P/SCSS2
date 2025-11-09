@@ -1,9 +1,29 @@
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QMainWindow
+
+from PyQt5.QtWidgets import QMainWindow,QDialog
 from Ui.window_mian import Ui_MainWindow
 from common.data_bus import DataBus
 from Ui.widget_choose import Ui_Form
+from Ui.dialog_mode_change import Ui_modechange as Modechange
+
+
+
+class ChooseColorDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.ui = Modechange()
+        self.ui.setupUi(self)
+        self.setWindowTitle("模式选择")
+        self.ui.label.setText("是否选择颜色模式？")
+        self.ui.buttonBox.accepted.connect(self.on_accept)
+        self.ui.buttonBox.rejected.connect(self.on_reject)
+
+    def on_accept(self):
+        self.accept()
+
+    def on_reject(self):
+        self.reject()
 
 
 
@@ -17,11 +37,10 @@ class MainWindowLogic(QMainWindow):
 
 
         # 绑定信号
-        self.ui.action_ToColorMode.connectNotify(self.changemode)
-        #connect(self.changemode)
-        # self.ui.action_ToYoloMode.connect(self.changemode)
-        # self.ui.action_ToClipMode.connect(self.changemode)
-        # self.ui.action_ToHhitMode.connect(self.changemode)
+        self.ui.action_ToColorMode.triggered.connect(self.changemode)
+        self.ui.action_ToYoloMode.triggered.connect(self.changemode)
+        self.ui.action_ToClipMode.triggered.connect(self.changemode)
+        self.ui.action_ToHhitMode.triggered.connect(self.changemode)
 
         # self.bus.pcie_di_update.connect(self.update_di_lcd)
         # self.bus.camera0_img.connect(self.set_cam0_label)
@@ -35,9 +54,23 @@ class MainWindowLogic(QMainWindow):
             return
         mode = action.text()
         
-        if mode :
+        if mode =='颜色':
+            dialog = ChooseColorDialog()
+            result = dialog.exec_()
+            if result == QDialog.Accepted:
+                self.bus.mode_changed.emit('color')
+                print(mode)
+
+        elif mode =='clip':
             print(mode)
-    
+
+        elif mode =='yolo':
+            print(mode)
+   
+        elif mode =='高光谱':
+            print(mode)
+
+
     @pyqtSlot(int)
     def update_do_led(self, do):
         for i in range(5):
