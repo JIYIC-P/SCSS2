@@ -14,13 +14,22 @@ from common.data_bus import DataBus
 from common.config_manager import ConfigManager
 
 
-import random
-
 import time
+
+
 import cv2
+import numpy as np
+from PyQt5.QtGui import QImage
 '''
 工具函数
 '''
+def ndarray_to_qimage(img_bgr: np.ndarray) -> QImage:
+    """OpenCV BGR 图 → RGB888 QImage"""
+    h, w, ch = img_bgr.shape
+    rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    bytes_per_line = ch * w
+    return QImage(rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
+
 
 def cut_img(frame,x,width,y,height):
     '''裁剪图片'''
@@ -84,24 +93,26 @@ class Updater():
         """
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
        
-        self.pcie_status=self.com_model.pcie.status_judg(3)
+        self.bus.pcie_di_update.emit(self.pcie_signal)  #发射相机一数据
+        print("发送的pcie信息",self.bus.pcie_di_update)
+
+        self.pcie_status=self.com_model.pcie.status_judg(self.pcie_signal)
         if self.com_model.mode in ('clip', 'yolo'): 
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
-            self.bus.camera0_img.emit(self.frame0)  #发射相机一数据
             self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
-            self.bus.camera1_img.emit(self.frame0)  #发射相机一数据
         elif self.com_model.mode=='color':
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
-            self.bus.camera0_img.emit(self.frame0)  #发射相机一数据
         elif self.com_model.mode=='hhit':
             self.hhit_signal=self.com_model.hhit.float_array_np.copy() #获取原始hhit信息
-            self.bus.hhit_data.emit(self.hhit_signal)  #发送hhit信号
 
 
     def setmode(self,mode):
         self.mode = mode
         self.com_model.changemode(mode)
-       
+
+        if ConfigManager().get(f"{self.mode}worker") is not None:
+            self.worker=ConfigManager().get(f"{self.mode}worker")
+        
 
     def setworker(self,workerlist):
         self.worker=workerlist
@@ -179,10 +190,14 @@ class Updater():
             if self.frame0 is not None and self.frame1 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-                _, ID, _ = yolo_mode().match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
+                frame, ID, _ = yolo_mode().match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
                 self.count+=1
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
+                '''这里应该返回，还没有结束'''
+                self.bus.camera0_img.emit(ndarray_to_qimage(frame))  #发射相机一裁剪后的图片
+                self.bus.camera1_img.emit(ndarray_to_qimage(self.frame1))  #发射相机二元数据
+                print("发送的信息",self.bus.algo_result)
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
@@ -191,6 +206,10 @@ class Updater():
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
+                '''这里应该返回，还没有结束'''
+                self.bus.camera0_img.emit(ndarray_to_qimage(self.frame0))  #发射相机一裁剪后的图片
+                self.bus.camera1_img.emit(ndarray_to_qimage(frame_cut0))  #发射相机二元数据
+
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
                 return {"ID": ID, "count": self.count}
@@ -201,8 +220,11 @@ class Updater():
                 return
             frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
             frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-            _, _, _,ID =  clip_mode().match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
+            vis, _,ID =  clip_mode().match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
             self.count+=1
+            '''这里应该返回，还没有结束'''
+            self.bus.camera0_img.emit(ndarray_to_qimage(vis)) #发射相机一裁剪后的图片
+            self.bus.camera1_img.emit(ndarray_to_qimage(self.frame1))  #发射相机二元数据
             self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
             return {"ID": ID, "count": self.count}
@@ -212,6 +234,10 @@ class Updater():
                 return
             ID,_=hhit_mode().match_hhit(self.hhit_signal)
             self.count+=1
+
+
+            self.bus.hhit_data.emit(self.hhit_signal)  #发送hhit信号
+
             self.bus.algo_result.emit({"ID": ID, "count": self.count})
             return {"ID": ID, "count": self.count}
 
@@ -219,42 +245,43 @@ class Updater():
 
 
 
-def test_changemode_slot():
+# def test_changemode_slot():
 
-    import sys
-    from pathlib import Path  
-    root = Path(__file__).resolve().parent.parent
-    sys.path.insert(0, str(root))
+#     import sys
+#     from pathlib import Path  
+#     root = Path(__file__).resolve().parent.parent
+#     sys.path.insert(0, str(root))
 
+
+#     from communicator.manager import Manager
+#     com_manager = Manager()
+#     print("当前模式:", com_manager.mode)
+    
+#     u1=Updater(com_manager)
+
+#     # ✅ 手动触发信号
+#     print("触发 mode_changed 信号，传入 'color'")
+#     u1.bus.mode_changed.emit("YOLO")
+    
+#     u1.bus.worker.emit([[1,3],[2],[],[],[]])
+
+
+
+
+# if __name__ == "__main__":
+#     test_changemode_slot()
+if __name__ == "__main__":
 
     from communicator.manager import Manager
     com_manager = Manager()
-    print("当前模式:", com_manager.mode)
-    
+    #com_manager.setmode("color")
+
     u1=Updater(com_manager)
-
-    # ✅ 手动触发信号
-    print("触发 mode_changed 信号，传入 'color'")
-    u1.bus.mode_changed.emit("YOLO")
+    u1.setmode("color")
+    t1 = time.time()
     
-    u1.bus.worker.emit([[1,3],[2],[],[],[]])
-
-
-
-
-if __name__ == "__main__":
-    test_changemode_slot()
-# if __name__ == "__main__":
-#     from communicator.manager import manager
-#     com_manager = manager()
-#     #com_manager.setmode("color")
-
-#     u1=Updater(com_manager)
-#     u1.setmode("color")
-#     t1 = time.time()
-    
-#     while time.time() - t1 < 10:
-#         u1.update()
+    while time.time() - t1 < 10:
+        u1.update()
     # u1.generate_order(1)
 
     # img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
