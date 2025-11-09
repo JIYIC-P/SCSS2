@@ -20,7 +20,7 @@ from threading import Thread
 
 import cv2
 import numpy as np
-from PyQt5.QtGui import QImage
+from PyQt5.QtGui import QImage,QPixmap
 '''
 工具函数
 '''
@@ -221,8 +221,8 @@ class Updater():
                 self.count+=1
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
                 '''这里应该返回，还没有结束'''
-                self.bus.camera0_img.emit(ndarray_to_qimage(frame))  #发射相机一裁剪后的图片
-                self.bus.camera1_img.emit(ndarray_to_qimage(self.frame1))  #发射相机二元数据
+                self.bus.camera0_img.emit(QPixmap.fromImage(ndarray_to_qimage(frame))) #发射相机一裁剪后的图片
+                self.bus.camera1_img.emit(QPixmap.fromImage(ndarray_to_qimage(self.frame1))) #发射相机二元数据
                 
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
@@ -233,8 +233,8 @@ class Updater():
                 _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
                 '''这里应该返回，还没有结束'''
-                self.bus.camera0_img.emit(ndarray_to_qimage(self.frame0))  #发射相机一裁剪后的图片
-                self.bus.camera1_img.emit(ndarray_to_qimage(frame_cut0))  #发射相机二元数据
+                self.bus.camera0_img.emit(QPixmap.fromImage(ndarray_to_qimage(self.frame0)))#发射相机一裁剪后的图片
+                self.bus.camera1_img.emitQPixmap.fromImage((ndarray_to_qimage(frame_cut0)) ) #发射相机二元数据
 
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
@@ -249,8 +249,8 @@ class Updater():
             vis, _,ID =  clip_mode().match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
             self.count+=1
             '''这里应该返回，还没有结束'''
-            self.bus.camera0_img.emit(ndarray_to_qimage(vis)) #发射相机一裁剪后的图片
-            self.bus.camera1_img.emit(ndarray_to_qimage(self.frame1))  #发射相机二元数据
+            self.bus.camera0_img.emit(QPixmap.fromImage(ndarray_to_qimage(vis)) )#发射相机一裁剪后的图片
+            self.bus.camera1_img.emit(QPixmap.fromImage(ndarray_to_qimage(self.frame1))) #发射相机二元数据
             self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
             return {"ID": ID, "count": self.count}
