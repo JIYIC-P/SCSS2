@@ -53,30 +53,30 @@
          <number>12</number>
         </property>
         <item row="0" column="1" rowspan="5" colspan="2">
-         <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,6,1,6">
+         <layout class="QVBoxLayout" name="verticalLayout_frame" stretch="1,6,1,6">
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="lab_ShowFrame0Txt">
             <property name="text">
              <string>            主视角：</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_2">
+           <widget class="QLabel" name="lab_ShowFrame0Pic">
             <property name="text">
              <string>frame0</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="lab_ShowFrame1Txt">
             <property name="text">
              <string>            侧视角：</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_4">
+           <widget class="QLabel" name="lab_ShowFrame1Pic">
             <property name="text">
              <string>frame1</string>
             </property>
@@ -101,7 +101,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QLabel" name="label_10">
+             <widget class="QLabel" name="lab_PusherTip">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                 <horstretch>0</horstretch>
@@ -114,7 +114,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_11">
+             <widget class="QLabel" name="lab_InTip">
               <property name="text">
                <string>  输入状态</string>
               </property>
@@ -127,7 +127,7 @@
             <item>
              <layout class="QVBoxLayout" name="verticalLayout">
               <item>
-               <widget class="QPushButton" name="pushButton_6">
+               <widget class="QPushButton" name="btn_PusherStatus0">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -140,7 +140,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_7">
+               <widget class="QPushButton" name="btn_PusherStatus1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -153,7 +153,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_8">
+               <widget class="QPushButton" name="btn_PusherStatus2">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -166,7 +166,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_9">
+               <widget class="QPushButton" name="btn_PusherStatus3">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -179,7 +179,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_10">
+               <widget class="QPushButton" name="btn_PusherStatus4">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -196,7 +196,7 @@
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
-               <widget class="QPushButton" name="pushButton_11">
+               <widget class="QPushButton" name="btn_InStatus0">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -209,7 +209,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_12">
+               <widget class="QPushButton" name="btn_InStatus1">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -222,7 +222,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_13">
+               <widget class="QPushButton" name="btn_InStatus2">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -235,7 +235,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_14">
+               <widget class="QPushButton" name="btn_InStatus3">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -248,7 +248,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_15">
+               <widget class="QPushButton" name="btn_InStatus4">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -261,7 +261,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_16">
+               <widget class="QPushButton" name="btn_InStatus5">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -294,70 +294,70 @@
            <number>12</number>
           </property>
           <item>
-           <widget class="QPushButton" name="pushButton">
+           <widget class="QPushButton" name="btn_SetWorker0">
             <property name="text">
              <string>单击以选取</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_5">
+           <widget class="QLabel" name="lab_WokerTxt0">
             <property name="text">
              <string>推杆1：</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_2">
+           <widget class="QPushButton" name="btn_SetWorker1">
             <property name="text">
              <string>单击以选取</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_6">
+           <widget class="QLabel" name="lab_WokerTxt1">
             <property name="text">
              <string>推杆2：</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_3">
+           <widget class="QPushButton" name="btn_SetWorker2">
             <property name="text">
              <string>单击以选取</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_7">
+           <widget class="QLabel" name="lab_WokerTxt2">
             <property name="text">
              <string>推杆3：</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_4">
+           <widget class="QPushButton" name="btn_SetWorker3">
             <property name="text">
              <string>单击以选取</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_8">
+           <widget class="QLabel" name="lab_WokerTxt3">
             <property name="text">
              <string>推杆4：</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton_5">
+           <widget class="QPushButton" name="btn_SetWorker4">
             <property name="text">
              <string>单击以选取</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_9">
+           <widget class="QLabel" name="lab_WokerTxt4">
             <property name="text">
              <string>推杆5：</string>
             </property>
@@ -371,76 +371,51 @@
        <attribute name="title">
         <string>统计</string>
        </attribute>
-       <widget class="QCalendarWidget" name="calendarWidget">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>40</y>
-          <width>248</width>
-          <height>197</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QTableWidget" name="tableWidget">
-        <property name="geometry">
-         <rect>
-          <x>320</x>
-          <y>30</y>
-          <width>791</width>
-          <height>641</height>
-         </rect>
-        </property>
-        <row>
-         <property name="text">
-          <string>新建行</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>新建行</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>新建行</string>
-         </property>
-        </row>
-        <column>
-         <property name="text">
-          <string>新建列</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>新建列</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>新建列</string>
-         </property>
-        </column>
-       </widget>
-       <widget class="QDateEdit" name="dateEdit">
-        <property name="geometry">
-         <rect>
-          <x>60</x>
-          <y>350</y>
-          <width>110</width>
-          <height>22</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QDateEdit" name="dateEdit_2">
-        <property name="geometry">
-         <rect>
-          <x>60</x>
-          <y>390</y>
-          <width>110</width>
-          <height>22</height>
-         </rect>
-        </property>
-       </widget>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QCalendarWidget" name="calendarWidget"/>
+        </item>
+        <item row="0" column="1" rowspan="3">
+         <widget class="QTableWidget" name="tableWidget">
+          <row>
+           <property name="text">
+            <string>新建行</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>新建行</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>新建行</string>
+           </property>
+          </row>
+          <column>
+           <property name="text">
+            <string>新建列</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>新建列</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>新建列</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QDateEdit" name="dateEdit"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QDateEdit" name="dateEdit_2"/>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -460,77 +435,77 @@
     <property name="title">
      <string>模式选择</string>
     </property>
-    <widget class="QMenu" name="menu_3">
+    <widget class="QMenu" name="menu_ModeChange">
      <property name="title">
       <string>形状</string>
      </property>
-     <addaction name="actionyolo"/>
-     <addaction name="actionclip_2"/>
+     <addaction name="action_ToYoloMode"/>
+     <addaction name="action_ToClipMode"/>
     </widget>
-    <addaction name="menu_3"/>
-    <addaction name="action"/>
-    <addaction name="action_2"/>
+    <addaction name="menu_ModeChange"/>
+    <addaction name="action_ToColorMode"/>
+    <addaction name="action_ToHhitMode"/>
    </widget>
-   <widget class="QMenu" name="menu_2">
+   <widget class="QMenu" name="menu_ComTest">
     <property name="title">
      <string>通信测试</string>
     </property>
-    <addaction name="actionpcie"/>
-    <addaction name="actionserial"/>
-    <addaction name="actioncamera_1"/>
-    <addaction name="actioncamera_2"/>
+    <addaction name="action_TestPcie"/>
+    <addaction name="action_TestSerial"/>
+    <addaction name="action_TestCamera0"/>
+    <addaction name="action_TestCamera1"/>
    </widget>
-   <widget class="QMenu" name="menu_4">
+   <widget class="QMenu" name="menu_Setting">
     <property name="title">
      <string>设置</string>
     </property>
-    <addaction name="action_3"/>
+    <addaction name="action_SetColor"/>
    </widget>
    <addaction name="menu"/>
-   <addaction name="menu_2"/>
-   <addaction name="menu_4"/>
+   <addaction name="menu_ComTest"/>
+   <addaction name="menu_Setting"/>
   </widget>
-  <action name="action">
+  <action name="action_ToColorMode">
    <property name="text">
     <string>颜色</string>
    </property>
   </action>
-  <action name="action_2">
+  <action name="action_ToHhitMode">
    <property name="text">
     <string>高光谱</string>
    </property>
   </action>
-  <action name="actionyolo">
+  <action name="action_ToYoloMode">
    <property name="text">
     <string>yolo</string>
    </property>
   </action>
-  <action name="actionclip_2">
+  <action name="action_ToClipMode">
    <property name="text">
     <string>clip</string>
    </property>
   </action>
-  <action name="actionpcie">
+  <action name="action_TestPcie">
    <property name="text">
     <string>pcie</string>
    </property>
   </action>
-  <action name="actionserial">
+  <action name="action_TestSerial">
    <property name="text">
     <string>serial</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="action_SetColor">
    <property name="text">
     <string>自定义颜色</string>
    </property>
   </action>
-  <action name="actioncamera_1">
+  <action name="action_TestCamera0">
    <property name="text">
     <string>camera_1</string>
    </property>
   </action>
-  <action name="actioncamera_2">
+  <action name="action_TestCamera1">
    <property name="text">
     <string>camera_2</string>
    </property>
