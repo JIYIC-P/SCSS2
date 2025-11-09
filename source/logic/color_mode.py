@@ -32,7 +32,6 @@ class colorClass:
     def load_color_range(self) -> List[Tuple[List[int], List[int]]]:
         """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
         ranges_str = self.data
-        print("KKK")
         raw = {int(k): v for k, v in ranges_str.items()}
         result = []
         for i in range(5):
