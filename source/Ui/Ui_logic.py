@@ -1,5 +1,5 @@
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QPixmap
 
 from PyQt5.QtWidgets import QMainWindow,QDialog
 from Ui.window_mian import Ui_MainWindow
@@ -49,9 +49,10 @@ class MainWindowLogic(QMainWindow):
         # self.bus.algo_result.connect(self.update_result_table)
         # self.bus.push_rods.connect(self.update_do_led)
 
-    def update_mianframe(self,frame:QImage):
+    def update_mianframe(self,frame:QPixmap):
+        print(000)
         self.ui.lab_ShowFrame0Pic.setPixmap(frame)
-    def update_secondframe(self,frame:QImage):
+    def update_secondframe(self,frame:QPixmap):
         self.ui.lab_ShowFrame1Pic.setPixmap(frame)
 
     def changemode(self):

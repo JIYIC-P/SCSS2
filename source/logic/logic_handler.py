@@ -233,8 +233,13 @@ class Updater():
                 _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
                 '''这里应该返回，还没有结束'''
-                self.bus.camera0_img.emit(QPixmap.fromImage(ndarray_to_qimage(self.frame0)))#发射相机一裁剪后的图片
-                self.bus.camera1_img.emitQPixmap.fromImage((ndarray_to_qimage(frame_cut0)) ) #发射相机二元数据
+
+                s = ndarray_to_qimage(self.frame0)
+                print(s.__class__)
+                img = QPixmap.fromImage(s)
+                print(img.__class__)
+                self.bus.camera0_img.emit(img)#发射相机一裁剪后的图片
+                self.bus.camera1_img.emit(QPixmap.fromImage((ndarray_to_qimage(frame_cut0)))) #发射相机二元数据
 
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
 

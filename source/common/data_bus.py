@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QObject, pyqtSignal
 from common.config_manager import ConfigManager
-from PyQt5.QtGui import QPixmap
+import numpy as np
 
 class DataBus(QObject):
     # ========= 前端 → 后台 =========
@@ -10,9 +10,9 @@ class DataBus(QObject):
 
     # ========= 通信 → 前端 =========
     pcie_di_update   = pyqtSignal(int)          # 16 位 DI
-    camera0_img      = pyqtSignal(QPixmap)     # 图片
-    camera1_img      = pyqtSignal(QPixmap)
-    hhit_data        = pyqtSignal(object)  # np.ndarray
+    camera0_img      = pyqtSignal(np.ndarray)     # 图片
+    camera1_img      = pyqtSignal(np.ndarray)
+    hhit_data        = pyqtSignal(np.ndarray)  # np.ndarray
 
     # ========= 逻辑 → 前端 =========
     algo_result      = pyqtSignal(dict)         # 识别结果
