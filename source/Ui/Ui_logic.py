@@ -42,11 +42,17 @@ class MainWindowLogic(QMainWindow):
         self.ui.action_ToClipMode.triggered.connect(self.changemode)
         self.ui.action_ToHhitMode.triggered.connect(self.changemode)
 
+        self.bus.camera0_img.connect(self.update_mianframe)
+        self.bus.camera1_img.connect(self.update_secondframe)
         # self.bus.pcie_di_update.connect(self.update_di_lcd)
         # self.bus.camera0_img.connect(self.set_cam0_label)
         # self.bus.algo_result.connect(self.update_result_table)
         # self.bus.push_rods.connect(self.update_do_led)
 
+    def update_mianframe(self,frame:QImage):
+        self.ui.lab_ShowFrame0Pic.setPixmap(frame)
+    def update_secondframe(self,frame:QImage):
+        self.ui.lab_ShowFrame1Pic.setPixmap(frame)
 
     def changemode(self):
         action = self.sender()
