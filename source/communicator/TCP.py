@@ -21,7 +21,7 @@ class ClassifierReceiver:
     def __init__(self):
     
         # DLL 路径，需替换为你实际的 DLL 所在路径
-        self.dll_path = r'source\Lib\ClassifyResultReceiver.dll'
+        self.dll_path = r'Lib\ClassifyResultReceiver.dll'
 
         # 统计相关
         self.count_frame = 0

@@ -11,6 +11,8 @@ from logic.clip_mode import clipClass as clip_mode
 from logic.hhit_mode import hhitClass as hhit_mode
 
 from common.data_bus import DataBus
+from common.config_manager import ConfigManager
+
 
 import random
 
@@ -52,13 +54,18 @@ class Updater():
         self.pcie_signal=None
         self.pcie_status=None
         self.count=0
-        self.worker=[1,2,3,4,5]
+        self.worker=[[],[],[],[],[]]
         self.obj=[0,0,0,0,0] #物品,暂时命名，具体含义是存放衣服序列的变化
         #每个工位创建一个队列，存放要推的衣服顺序序列
         self.count_worker_queues=[[],[],[],[],[]]
-        
         self.bus=DataBus()
-        self.bus.mode_changed.connect(self.send_order)
+
+        self.bus.mode_changed.connect(self.setmode)
+        self.bus.manual_cmd.connect(self.send_order)
+        self.bus.worker.connect(self.setworker)
+        
+        
+
 
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
 
@@ -93,8 +100,14 @@ class Updater():
 
     def setmode(self,mode):
         self.mode = mode
+        self.com_model.changemode(mode)
+       
 
-    
+    def setworker(self,workerlist):
+        self.worker=workerlist
+        ConfigManager().set(f"{self.mode}worker",value=self.worker)
+
+
     def generate_order(self,result):
         """
         传入ID和工位信息
@@ -114,7 +127,7 @@ class Updater():
 
         cloth_id = result["ID"]          # 衣服类别
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
-            if cloth_id == worker_id:                   # 找到目标工位
+            if cloth_id in worker_id:                   # 找到目标工位
                 # 把衣服编号写进对应队列
                 self.count_worker_queues[idx].append(result["count"])
                 #把衣服编号写入对应obj
@@ -205,17 +218,43 @@ class Updater():
             
 
 
-if __name__ == "__main__":
-    from communicator.manager import manager
-    com_manager = manager()
-    com_manager.setmode("color")
 
-    u1=Updater(com_manager)
-    u1.setmode("color")
-    t1 = time.time()
+def test_changemode_slot():
+
+    import sys
+    from pathlib import Path  
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root))
+
+
+    from communicator.manager import Manager
+    com_manager = Manager()
+    print("当前模式:", com_manager.mode)
     
-    while time.time() - t1 < 10:
-        u1.update()
+    u1=Updater(com_manager)
+
+    # ✅ 手动触发信号
+    print("触发 mode_changed 信号，传入 'color'")
+    u1.bus.mode_changed.emit("YOLO")
+    
+    u1.bus.worker.emit([[1,3],[2],[],[],[]])
+
+
+
+
+if __name__ == "__main__":
+    test_changemode_slot()
+# if __name__ == "__main__":
+#     from communicator.manager import manager
+#     com_manager = manager()
+#     #com_manager.setmode("color")
+
+#     u1=Updater(com_manager)
+#     u1.setmode("color")
+#     t1 = time.time()
+    
+#     while time.time() - t1 < 10:
+#         u1.update()
     # u1.generate_order(1)
 
     # img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"

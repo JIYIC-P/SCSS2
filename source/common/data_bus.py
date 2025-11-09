@@ -5,6 +5,7 @@ class DataBus(QObject):
     # ========= 前端 → 后台 =========
     mode_changed     = pyqtSignal(str)          # 用户切换模式
     manual_cmd       = pyqtSignal(int)          # 手动推杆
+    worker           = pyqtSignal('QVariantList')   #手动设置工位xinxi
 
     # ========= 通信 → 前端 =========
     pcie_di_update   = pyqtSignal(int)          # 16 位 DI

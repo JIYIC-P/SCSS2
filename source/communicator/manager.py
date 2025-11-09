@@ -10,29 +10,6 @@ import communicator.mbs as mbs
 import communicator.tcp as hhit
 from common.data_bus import DataBus
 
-
-
-'''
-tcp回调函数，复用
-'''
-
-# def __float_to_int(arr: np.ndarray) -> np.ndarray:
-#     """先 clip 再四舍五入，最后 uint8，保证 0-6"""
-#     clipped = np.clip(arr, 0.0, 20.0)
-#     return np.round(clipped).astype(np.uint8)
-
-# def statistics_data(float_array: np.ndarray) -> List[int]:
-#     try:
-#         int_array = __float_to_int(float_array)
-#         counts = np.bincount(int_array, minlength=7)
-#         return counts.tolist()
-#     except Exception as e:
-#         print(f"统计数据出错（数组形状：{float_array.shape}）：{e}")
-#         return [0] * 7
-
-
-
-
 class Manager():
 
     def __init__(self):
@@ -45,11 +22,13 @@ class Manager():
         self.camera1 = None
         self.pcie = None
         self.hhit = None
-        self.bus.mode_changed.connect(self.changemode)
+        #self.bus.mode_changed.connect(self.changemode)
         self.mode = self.bus.cfg.get("qt","config","mode")
         self.start()
+    
+    # def setmode(self):
 
-
+        
 
     def start(self):
         """
@@ -131,3 +110,5 @@ class Manager():
         self.stop()
         self.mode = mode
         self.start()
+
+
