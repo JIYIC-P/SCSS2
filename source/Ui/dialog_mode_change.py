@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\change_mode.ui'
+# Form implementation generated from reading ui file '.\.ui\dialog_mode_change.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -11,31 +11,35 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Dialog(object):
-    def setupUi(self, 修改模式):
-        修改模式.setObjectName("修改模式")
-        修改模式.setGeometry(QtCore.QRect(0, 0, 259, 340))
-        self.verticalLayoutWidget = QtWidgets.QWidget(修改模式)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 241, 321))
-        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.label = QtWidgets.QLabel(self.verticalLayoutWidget)
+class Ui_modechange(object):
+    def setupUi(self, modechange):
+        modechange.setObjectName("modechange")
+        modechange.resize(314, 257)
+        self.label = QtWidgets.QLabel(modechange)
+        self.label.setGeometry(QtCore.QRect(30, 40, 221, 50))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setMaximumSize(QtCore.QSize(16777215, 50))
         self.label.setObjectName("label")
-        self.verticalLayout.addWidget(self.label)
-        self.buttonBox = QtWidgets.QDialogButtonBox(self.verticalLayoutWidget)
+        self.buttonBox = QtWidgets.QDialogButtonBox(modechange)
+        self.buttonBox.setGeometry(QtCore.QRect(90, 200, 217, 50))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.buttonBox.sizePolicy().hasHeightForWidth())
+        self.buttonBox.setSizePolicy(sizePolicy)
+        self.buttonBox.setMaximumSize(QtCore.QSize(16777215, 50))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
-        self.verticalLayout.addWidget(self.buttonBox)
 
-        self.retranslateUi(修改模式)
-        self.buttonBox.accepted.connect(修改模式.accept) # type: ignore
-        self.buttonBox.rejected.connect(修改模式.reject) # type: ignore
-        QtCore.QMetaObject.connectSlotsByName(修改模式)
+        self.retranslateUi(modechange)
+        QtCore.QMetaObject.connectSlotsByName(modechange)
 
-    def retranslateUi(self, 修改模式):
+    def retranslateUi(self, modechange):
         _translate = QtCore.QCoreApplication.translate
-        修改模式.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.label.setText(_translate("Dialog", "TextLabel"))
+        modechange.setWindowTitle(_translate("modechange", "Dialog"))
+        self.label.setText(_translate("modechange", "TextLabel"))
