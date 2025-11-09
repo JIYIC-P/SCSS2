@@ -11,7 +11,7 @@ from pathlib import Path
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
-from Ui.main_window import Ui_MainWindow  
+from source.Ui.window_mian import Ui_MainWindow  
 from PyQt5.QtWidgets import QApplication, QMessageBox, QMainWindow
 
 class Example(QMainWindow):  

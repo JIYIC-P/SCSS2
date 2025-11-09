@@ -45,12 +45,11 @@ class Manager():
         self.camera1 = None
         self.pcie = None
         self.hhit = None
-        self.bus.mode_changed.connect(self.setmode)
-    
-    def setmode(self,mode):
-        self.mode = mode
-        self.bus.cfg.set("qt","config","mode",value=mode)
+        self.bus.mode_changed.connect(self.changemode)
+        self.mode = self.bus.cfg.get("qt","config","mode")
         self.start()
+
+
 
     def start(self):
         """
