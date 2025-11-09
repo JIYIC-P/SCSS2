@@ -49,7 +49,7 @@ class Manager():
                 
             elif self.mode=='hhit':
                 self.hhit= hhit.ClassifierReceiver()
-                self.hhit.start(server_ip=self.bus.cfg.get('tcp','manager','ip'), port=self.bus.cfg.get('tcp','manager','port'), rcv_buf_size=1000) #启动hhit接收640
+                self.hhit.start(server_ip=self.bus.cfg.get('tcp','address','ip'), port=self.bus.cfg.get('tcp','address','port'), rcv_buf_size=1000) #启动hhit接收640
                 
     def stop(self):
         """
