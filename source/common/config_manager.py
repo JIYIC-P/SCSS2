@@ -7,12 +7,16 @@ class ConfigManager:
 
     def __init__(self):
         with self._lock:
-            self._user_file = pathlib.Path(__file__).parent.parent.parent / r"settings/user_config.json"  # 用户配置信息
-            self._default_file = pathlib.Path(__file__).parent.parent.parent / r"settings\default_config.json"  # 默认配置信息
-            if self._user_file.exists():
-                self._cfg = json.loads(self._user_file.read_text(encoding='utf-8'))
-            else:
-                self._cfg = json.loads(self._default_file.read_text(encoding='utf-8'))
+            self._user_file = pathlib.Path(__file__).parent.parent.parent / r"settings//user_config.json"  # 用户配置信息
+            self._default_file = pathlib.Path(__file__).parent.parent.parent / r"settingsdefault_config.json"  # 默认配置信息
+            try:
+
+                if self._user_file.exists():
+                    self._cfg = json.loads(self._user_file.read_text(encoding='utf-8'))
+                else:
+                    self._cfg = json.loads(self._default_file.read_text(encoding='utf-8'))
+            except Exception as e:
+                print(e)
 
     def get(self, *keys, default=None):
         # 逐层获取值
