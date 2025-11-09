@@ -75,8 +75,27 @@ class Updater():
         
         
 
+        self._is_running = True
+        self._sleep_time_ms = 100 / 1000.0  # 100ms => 0.1s
+
 
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
+
+
+    def run(self):
+        """线程主循环，在此不断调用 update()"""
+        while self._is_running:
+            try:
+                self.update()
+                self.msleep(int(self._sleep_time_ms * 1000))  # 控制循环频率，如 100ms
+            except Exception as e:
+                print(f"[UpdaterThread] 运行出错: {e}")
+                break
+
+    def stop(self):
+        """安全停止线程的方法"""
+        self._is_running = False
+        self.wait()  # 等待线程结束（可选）
 
 
     def get_data(self):
@@ -282,28 +301,5 @@ if __name__ == "__main__":
     
     while time.time() - t1 < 10:
         u1.update()
-    # u1.generate_order(1)
-
-    # img_path = r"C:\Users\14676\Desktop\new_env\bag\imgs\2025-10-16-14-05-58.png"
-    # u1=updater(manager('color'))
-    # frame = cv2.imread(img_path)
-    # if frame is None:                       # ---- 关键检查 ----
-    #     print("图片没读进来，请检查路径或文件是否损坏")
-    #     sys.exit()
-
-    # print("图片尺寸:", frame.shape[:2])
-    # vis, cls, conf = u1.Judgment('形状')
-    # print(f"检测结果 -> class_id={cls}, confidence={conf:.3f}")
-    # # vis, hsv_avg, color_id =u1.Judgment('颜色')
-    # # print(f"HSV 均值 -> {hsv_avg}")
-    # # print(f"匹配结果 -> color_id={color_id}")
-    # # vis, label, conf, label_id = u1.Judgment('clip')
-    # # print(f"CLIP 预测 -> label={label}  conf={conf:.3f}  id={label_id}")
-
-
-    # cv2.namedWindow("result", cv2.WINDOW_NORMAL)  # 确保窗口在前台
-    # cv2.imshow("result", vis)
-    # print("按任意键关闭窗口...")
-    # cv2.waitKey(0)                            # 阻塞直到按键
-    # cv2.destroyAllWindows()
+ 
     

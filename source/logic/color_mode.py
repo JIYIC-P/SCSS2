@@ -26,12 +26,13 @@ class colorClass:
         else:
             self.data=self.cfg.get("color_mode","ranges")
             self.range=self.load_color_range()
+
+            
     # ========== 工具函数（直接搬自原 Dialog.py） ==========
     def load_color_range(self) -> List[Tuple[List[int], List[int]]]:
         """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
         ranges_str = self.data
         raw = {int(k): v for k, v in ranges_str.items()}
-        print (raw)
         result = []
         for i in range(5):
             base = raw[i][0]
