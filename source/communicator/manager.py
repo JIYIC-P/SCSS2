@@ -103,7 +103,7 @@ class Manager():
                 print(f"[WARN] hhit stop failed: {e}")
             self.hhit = None
             
-    def changemode(self,mode):
+    def setmode(self,mode):
         """
         根据传入的mode来选择启动和停止哪些对象及其线程
         """

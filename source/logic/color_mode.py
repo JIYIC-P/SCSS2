@@ -20,18 +20,19 @@ class colorClass:
     def __init__(self,data=None):
         #self.data = data
         self.cfg=ConfigManager()
-    
+        
         if data is not None:
             self.data = data
         else:
             self.data=self.cfg.get("color_mode","ranges")
+
             self.range=self.load_color_range()
 
-            
     # ========== 工具函数（直接搬自原 Dialog.py） ==========
     def load_color_range(self) -> List[Tuple[List[int], List[int]]]:
         """返回 5 组 ([H_low,S_low,V_low], [H_high,S_high,V_high])"""
         ranges_str = self.data
+        print(self.data)
         raw = {int(k): v for k, v in ranges_str.items()}
         result = []
         for i in range(5):
@@ -76,7 +77,8 @@ class colorClass:
 
 
     # ========== 对外接口：单张图颜色检测 ==========
-    def match_color(self,frame: np.ndarray):
+    def match_color(self,frame: np.ndarray,
+                    ranges: List[Tuple[List[int], List[int]]] = None) -> Tuple[np.ndarray, List[float], Optional[int]]:
         """
         :param frame: BGR 图
         :param ranges: 外部可复用缓存，传 None 则内部自动加载
@@ -84,14 +86,14 @@ class colorClass:
             vis      : 原图（RGB）
             hsv_avg  : [H,S,V] 均值
             color_id : 1~5 或 None
-        # """
-        # if ranges is None:
-        #     ranges = self.range
+        """
+        if ranges is None:
+            ranges = self.load_color_range()
 
         vis = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         hsv_avg = self.segment_one(vis)
         
-        color_id =self.detect_color_by_hsv(hsv_avg,self.range)
+        color_id =self.detect_color_by_hsv(hsv_avg, ranges)
         return vis, hsv_avg, color_id
 
 

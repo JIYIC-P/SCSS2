@@ -10,12 +10,12 @@ from Ui.dialog_mode_change import Ui_modechange as Modechange
 
 
 class ChooseColorDialog(QDialog):
-    def __init__(self):
+    def __init__(self,mode):
         super().__init__()
         self.ui = Modechange()
         self.ui.setupUi(self)
         self.setWindowTitle("模式选择")
-        self.ui.label.setText("是否选择颜色模式？")
+        self.ui.label.setText(f"是否选择{mode}模式？")
         self.ui.buttonBox.accepted.connect(self.on_accept)
         self.ui.buttonBox.rejected.connect(self.on_reject)
 
@@ -53,22 +53,18 @@ class MainWindowLogic(QMainWindow):
         if not action:
             return
         mode = action.text()
-        
-        if mode =='颜色':
-            dialog = ChooseColorDialog()
+        if mode is not None:
+            dialog = ChooseColorDialog(mode)
+            if mode == '颜色':
+                mode = 'color'
+            elif mode == '高光谱':
+                mode = 'hhit'
             result = dialog.exec_()
             if result == QDialog.Accepted:
-                self.bus.mode_changed.emit('color')
-                print(mode)
+                self.bus.mode_changed.emit(mode)
 
-        elif mode =='clip':
-            print(mode)
 
-        elif mode =='yolo':
-            print(mode)
-   
-        elif mode =='高光谱':
-            print(mode)
+       
 
 
     @pyqtSlot(int)
