@@ -1,8 +1,7 @@
 import cv2
 from threading import Thread
 import time
-import pathlib
-import json
+
 
 import sys
 from pathlib import Path  
@@ -52,13 +51,13 @@ class ThreadedCamera:
               4. 启动独立线程持续更新视频帧
         """
         try:
+            
             self.cap = cv2.VideoCapture(self.source, cv2.CAP_MSMF)  # Windows使用DirectShow
             if not self.cap.isOpened():
                 raise Exception("无法打开相机")
             
             self.camera_opened = True
             self.set_camera()
-            
             # 启动帧更新线程
             self.thread = Thread(target=self.update, daemon=True)
             self.thread.start()

@@ -5,7 +5,6 @@ import sys
 from PIL import Image
 from typing import List, Tuple, Optional,Dict
 import torch
-import json
 import open_clip
 
 import sys
@@ -52,7 +51,7 @@ class clipClass:
             self.label_mapping = data
         else:
             self.label_mapping=self.cfg.get("clip_mode","labels")
-        print(self.label_mapping)
+       
         # 获取分词器
         self.tokenizer = open_clip.get_tokenizer(model_name)
         self.text_labels= [it for it in self.label_mapping]

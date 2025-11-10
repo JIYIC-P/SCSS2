@@ -71,6 +71,11 @@ class Updater():
         self.mode=None
         self.bus=DataBus()
 
+        self.clip_mode=None
+        self.color_mode=None
+        self.yolo_mode=None
+        self.hhit_mode=None
+
         self.bus.mode_changed.connect(self.setmode)
         self.bus.manual_cmd.connect(self.send_order)
         self.bus.worker.connect(self.setworker)
@@ -96,7 +101,7 @@ class Updater():
                 break
 
     def init_thread(self):
-            
+        time.sleep(1) 
         self.thread = Thread(target=self.run, daemon=True)
         self.thread.start()
 
@@ -124,6 +129,9 @@ class Updater():
 
         self.pcie_status=self.com_model.pcie.status_judg(self.pcie_signal)
         if self.com_model.mode in ('clip', 'yolo'): 
+            if self.com_model.camera0 is None or self.com_model.camera1 is None:
+                print("[ERROR] 相机未正确初始化！")
+                return
             self.frame0 = self.com_model.camera0.grab_frame() #获取相机一的图片信息
             self.frame1 = self.com_model.camera1.grab_frame() #获取相机二的图片信息
         elif self.com_model.mode=='color':
@@ -212,26 +220,29 @@ class Updater():
         #TODO： match_j待完善
         '''注意只返回ID，最后记得统一返回值类型和数量'''
         if self.mode=="yolo":
-
+            if self.yolo_mode is None:
+                self.yolo_mode=yolo_mode()
             if self.frame0 is not None and self.frame1 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-                frame, ID, _ = yolo_mode().match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
+                frame, ID, _ = self.yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
                 self.count+=1
+
                 self.bus.algo_result.emit({"ID": ID, "count": self.count})
                 '''这里应该返回，还没有结束'''
                 self.bus.camera0_img.emit(frame) #发射相机一裁剪后的图片
-                self.bus.camera1_img.emit(self.frame1)#发射相机二元数据
+                self.bus.camera1_img.emit(frame_cut1)#发射相机二元数据
                 
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
+
+            if self.color_mode is None:
+                self.color_mode=color_mode()
             if self.frame0 is not None:
-
-
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
-                _,_,ID=color_mode().match_color(frame_cut0)#返回的有三个值，目前只用ID
+                _,_,ID=self.color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
                 self.count+=1
                 self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
@@ -239,30 +250,29 @@ class Updater():
 
                 return {"ID": ID, "count": self.count}
         if self.mode=='clip':
+            if self.clip_mode is None:
+                self.clip_mode=clip_mode()
+            if self.frame0 is not None and  self.frame1 is not None:
+                
+                frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+                frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
+                vis,_,_,ID =  self.clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
+                self.count+=1
+                '''这里应该返回，还没有结束'''
+                self.bus.camera0_img.emit(vis)#发射相机一裁剪后的图片
+                self.bus.camera1_img.emit(self.frame1) #发射相机二元数据
+                self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
-            if self.frame0 is None or self.frame1 is None:
-                print("[警告] frame0 或 frame1 未初始化，无法执行后续操作")
-                return
-            frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
-            frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-            vis, _,ID =  clip_mode().match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
-            self.count+=1
-            '''这里应该返回，还没有结束'''
-            self.bus.camera0_img.emit(vis)#发射相机一裁剪后的图片
-            self.bus.camera1_img.emit(self.frame1) #发射相机二元数据
-            self.bus.algo_result.emit({"ID": ID, "count": self.count})
-
-            return {"ID": ID, "count": self.count}
-        if self.mode=='HHIT':
+                return {"ID": ID, "count": self.count}
+        if self.mode=='hhit':
+            if self.hhit_mode is None:
+                self.hhit_mode=hhit_mode()
             if self.hhit_signal is None:
                 print("[警告] 未接收到高光谱信息，无法执行后续操作")
                 return
-            ID,_=hhit_mode().match_hhit(self.hhit_signal)
+            ID,_=self.hhit_mode.match_hhit(self.hhit_signal)
             self.count+=1
-
-
             self.bus.hhit_data.emit(self.hhit_signal)  #发送hhit信号
-
             self.bus.algo_result.emit({"ID": ID, "count": self.count})
             return {"ID": ID, "count": self.count}
 
@@ -302,7 +312,7 @@ if __name__ == "__main__":
     #com_manager.setmode("color")
 
     u1=Updater(com_manager)
-    u1.setmode("color")
+    u1.setmode("yolo")
  
  
     

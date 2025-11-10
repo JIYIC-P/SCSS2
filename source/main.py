@@ -3,7 +3,6 @@ root = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(root))
 
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThread
 from Ui.Ui_logic import MainWindowLogic
 from communicator.manager import Manager
 from logic.logic_handler import Updater                

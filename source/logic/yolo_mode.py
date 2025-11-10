@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
         if frame is not None and frame1 is not None:
             cv2.imshow("color_result", frame)
-            cv2.imshow("color_result", frame1)
+            cv2.imshow("color_", frame1)
             frame,class_id,confidence =test1.match_shape(frame,frame1)
             print(f"HSV 均值 -> {confidence}")
             print(f"匹配结果 -> id={class_id}")
