@@ -49,20 +49,34 @@ class yoloClass:
 
 # ====================== 新增：单张图片测试 ======================
 if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root))
 
-    frame = cv2.imread(img_path)
-    frame1=frame
-    if frame is None:                       # ---- 关键检查 ----
-        print("图片没读进来，请检查路径或文件是否损坏")
-        sys.exit()
-
-    print("图片尺寸:", frame.shape[:2])
+    from communicator.camera import ThreadedCamera
+    import time
+    camera = ThreadedCamera(0)
+    camera.init_camera()
+    camera1 = ThreadedCamera(1)
+    camera1.init_camera()
+    t = time.time()
+    t1 = time.time()
+  
     test1=yoloClass()
-    vis, cls, conf = test1.match_shape(frame,frame1)
-    print(f"检测结果 -> class_id={cls}, confidence={conf:.3f}")
+    while t1 - t < 10:
+        t1 = time.time()
 
-    cv2.namedWindow("result", cv2.WINDOW_NORMAL)  # 确保窗口在前台
-    cv2.imshow("result", vis)
-    print("按任意键关闭窗口...")
-    cv2.waitKey(0)                            # 阻塞直到按键
-    cv2.destroyAllWindows()
+        frame = camera.grab_frame()
+        frame1 =camera1.grab_frame()
+
+        if frame is not None and frame1 is not None:
+            cv2.imshow("color_result", frame)
+            cv2.imshow("color_result", frame1)
+            frame,class_id,confidence =test1.match_shape(frame,frame1)
+            print(f"HSV 均值 -> {confidence}")
+            print(f"匹配结果 -> id={class_id}")
+            
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            camera.close_cam()
+            break
