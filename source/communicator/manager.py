@@ -39,13 +39,16 @@ class Manager():
             self.pcie=pcie.PcIeIO(0)
             self.pcie.start() #启动板卡读线程
             if self.mode in ('clip', 'yolo'): 
-                self.camera0 = camera.ThreadedCamera(0)
-                self.camera0.init_camera()     #打开一号相机 
-                self.camera1=camera.ThreadedCamera(1)
-                self.camera1.init_camera()     #打开二号相机  
+                if self.camera0 is None:
+                    self.camera0 = camera.ThreadedCamera(0)
+                if self.camera1 is None:     #打开一号相机 
+                    self.camera1=camera.ThreadedCamera(1)     
+                self.camera1.init_camera()     
+                self.camera0.init_camera()  #打开二号相机  
                 
             elif self.mode=='color':
-                self.camera0 = camera.ThreadedCamera(0)
+                if self.camera0 is None:
+                    self.camera0 = camera.ThreadedCamera(0)
                 self.camera0.init_camera()     #打开一号相机  
                 
             elif self.mode=='hhit':
@@ -56,14 +59,22 @@ class Manager():
         """
         结束线程，但是保留对象
         """
+
         if self.mode is not None:
             self.pcie.stop() 
             if self.mode in ('clip', 'yolo'): 
-                self.camera0.close_cam()     #关闭一号相机 
-                self.camera1.close_cam()     #关闭二号相机  
-                
+                self.camera0.stop()     #关闭一号相机 
+                self.camera1.stop()     #关闭二号相机  
+
             elif self.mode=='color':
-                self.camera0.close_cam()     #关闭一号相机   
+                self.camera0.stop()     #关闭一号相机   
+                
+            # if self.mode in ('clip', 'yolo'): 
+            #     self.camera0.close_cam()     #关闭一号相机 
+            #     self.camera1.close_cam()     #关闭二号相机  
+
+            # elif self.mode=='color':
+            #     self.camera0.close_cam()     #关闭一号相机   
                 
             elif self.mode=='hhit':
                 self.hhit.stop()

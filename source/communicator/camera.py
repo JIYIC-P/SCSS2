@@ -143,6 +143,18 @@ class ThreadedCamera:
         if self.current_frame is not None:
             return self.current_frame
         return None
+    
+
+
+    def stop(self):
+        """
+        安全停止帧抓取线程，但不释放相机资源，保留对象状态。
+        之后可再次调用 init_camera() 重新启动线程。
+        """
+        if self._running:          # 只在运行时才需要停
+            self._running = False
+            if hasattr(self, 'thread') and self.thread.is_alive():
+                self.thread.join(timeout=1.0)
 
     def close_cam(self):
         """
