@@ -274,7 +274,7 @@ class MainWindowLogic(QMainWindow):
             worker_name = f"工位{i}"
             if worker_name in self.worker_labels:
                 # 提取该工位的所有标签ID（确保是字符串类型）
-                ids = [str(label["id"]) for label in self.worker_labels[worker_name]]
+                ids = [int(label["id"]) for label in self.worker_labels[worker_name]]
                 worker_array[i] = ids
         
         # 发射信号
