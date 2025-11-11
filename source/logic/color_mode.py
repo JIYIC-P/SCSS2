@@ -24,7 +24,7 @@ class colorClass:
         if data is not None:
             self.data = data
         else:
-            self.data=self.cfg.get("color_mode","ranges")
+            self.data=self.cfg.get("color_mode","labels")
 
             self.range=self.load_color_range()
 

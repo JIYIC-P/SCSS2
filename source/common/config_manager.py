@@ -46,6 +46,4 @@ class ConfigManager:
             self._user_file.write_text(json.dumps(self._cfg, indent=2), encoding='utf-8')
 if __name__ == '__main__':
     cfg = ConfigManager()
-    value="aab"
-    cfg.set("mode", value=value)
-    print(cfg.get("qt"))
+    print(cfg.get("color_mode"))
