@@ -39,16 +39,18 @@ class Manager():
             self.pcie=pcie.PcIeIO(0)
             self.pcie.start() #启动板卡读线程
             if self.mode in ('clip', 'yolo'): 
-                if self.camera0 is None:
-                    self.camera0 = camera.ThreadedCamera(0)
-                if self.camera1 is None:     #打开一号相机 
-                    self.camera1=camera.ThreadedCamera(1)     
+           
+
+                self.camera0 = camera.ThreadedCamera(0)
+           #打开一号相机 
+                self.camera1=camera.ThreadedCamera(1)     
                 self.camera1.init_camera()     
                 self.camera0.init_camera()  #打开二号相机  
                 
             elif self.mode=='color':
-                if self.camera0 is None:
-                    self.camera0 = camera.ThreadedCamera(0)
+                
+           
+                self.camera0 = camera.ThreadedCamera(0)
                 self.camera0.init_camera()     #打开一号相机  
                 
             elif self.mode=='hhit':
@@ -57,29 +59,17 @@ class Manager():
                 
     def stop(self):
         """
-        结束线程，但是保留对象
+        结束线程，但保留对象状态
         """
-
         if self.mode is not None:
-            self.pcie.stop() 
-            if self.mode in ('clip', 'yolo'): 
-                self.camera0.stop()     #关闭一号相机 
-                self.camera1.stop()     #关闭二号相机  
-
-            elif self.mode=='color':
-                self.camera0.stop()     #关闭一号相机   
-                
-            # if self.mode in ('clip', 'yolo'): 
-            #     self.camera0.close_cam()     #关闭一号相机 
-            #     self.camera1.close_cam()     #关闭二号相机  
-
-            # elif self.mode=='color':
-            #     self.camera0.close_cam()     #关闭一号相机   
-                
-            elif self.mode=='hhit':
+            if self.pcie is not None:
+                self.pcie.stop()
+            if self.camera0 is not None:
+                self.camera0.stop()  # 停止线程，但不释放对象
+            if self.camera1 is not None:
+                self.camera1.stop()  # 停止线程，但不释放对象
+            if self.hhit is not None:
                 self.hhit.stop()
-                
-
         """
         此处加入对象检测，保证完全关闭
         """      

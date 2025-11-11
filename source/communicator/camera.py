@@ -29,6 +29,9 @@ class ThreadedCamera:
         self._running = True  # 控制线程运行的标志
 
 
+        self._initialized = False  # 新增标志位，用于标记是否已经初始化过相机参数
+
+
       
         data = ConfigManager()
         # 相机参数
@@ -57,7 +60,9 @@ class ThreadedCamera:
                 raise Exception("无法打开相机")
             
             self.camera_opened = True
-            self.set_camera()
+            if not self._initialized:  # 检查是否已经初始化过相机参数
+                self.set_camera()
+                self._initialized = True  # 标记已初始化
             # 启动帧更新线程
             self.thread = Thread(target=self.update, daemon=True)
             self.thread.start()
@@ -78,6 +83,7 @@ class ThreadedCamera:
         if not self.camera_opened:
             return
 
+    
         print("应用相机设置")
         
         # 设置分辨率
