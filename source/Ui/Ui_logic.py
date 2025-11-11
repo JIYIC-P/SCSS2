@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal  # 添加 pyqtSignal
+from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QImage, QColor
 from PyQt5.QtWidgets import (
     QMainWindow, QDialog, QTableWidgetItem, QMessageBox, 
@@ -93,6 +93,8 @@ class MainWindowLogic(QMainWindow):
             return
             
         mode_text = action.text()
+        print(f"【调试】收到模式文本: '{mode_text}'")
+        
         mode_map = {
             '颜色': 'color',
             '高光谱': 'hhit',
@@ -128,7 +130,11 @@ class MainWindowLogic(QMainWindow):
             self.worker_labels.clear()
             self.bus.mode_changed.emit(self.current_mode)
             self._update_worker_buttons()
-            # 发射空标签信号
+            
+            # ==== 新增：加载工位配置并自动映射 ====
+            self._load_and_apply_worker_config(new_mode)
+            
+            # 发射信号
             self._emit_worker_labels()
             
             QMessageBox.information(
@@ -182,6 +188,79 @@ class MainWindowLogic(QMainWindow):
         
         print(f"【调试】转换后数据: {display_data}")
         return display_data
+
+    def _load_and_apply_worker_config(self, mode):
+        """
+        加载工位配置并自动映射标签
+        配置格式: "colorworker": [[0,1], [], [], [], []]
+        """
+        worker_cfg_key = f"{mode}worker"
+        worker_config = self.bus.cfg.get(worker_cfg_key)
+        
+        if worker_config is None:
+            print(f"【调试】未找到工位配置: {worker_cfg_key}")
+            return
+        
+        if not isinstance(worker_config, list) or len(worker_config) != 5:
+            print(f"【警告】工位配置格式错误: {worker_cfg_key} = {worker_config}")
+            QMessageBox.warning(self, "警告", f"工位配置格式错误，请检查配置文件！\n键: {worker_cfg_key}")
+            return
+        
+        print(f"【调试】加载工位配置: {worker_cfg_key} = {worker_config}")
+        
+        # 创建标签ID到标签数据的映射，方便快速查找
+        label_id_map = {str(label["id"]): label for label in self.left_labels}
+        
+        # 遍历5个工位
+        for i, label_ids in enumerate(worker_config):
+            if not label_ids:
+                continue  # 跳过空配置
+            
+            worker_name = f"工位{i}"
+            
+            # 验证并收集标签
+            valid_labels = []
+            missing_ids = []
+            
+            for label_id in label_ids:
+                label_id_str = str(label_id)
+                if label_id_str in label_id_map:
+                    valid_labels.append(label_id_map[label_id_str])
+                else:
+                    missing_ids.append(label_id)
+            
+            # 报告缺失的标签
+            if missing_ids:
+                print(f"【警告】工位 {worker_name} 的标签ID不存在: {missing_ids}")
+                QMessageBox.warning(
+                    self, 
+                    "标签缺失", 
+                    f"工位 {worker_name} 的部分标签ID不存在: {missing_ids}\n"
+                    f"请检查配置或标签数据！"
+                )
+            
+            # 分配有效标签到工位
+            if valid_labels:
+                self.worker_labels[worker_name] = valid_labels
+                
+                # 从可用池中移除已分配的标签
+                for label in valid_labels:
+                    if label in self.left_labels:
+                        self.left_labels.remove(label)
+                
+                print(f"【调试】工位 {worker_name} 自动分配 {len(valid_labels)} 个标签")
+        
+        # 更新按钮显示
+        self._update_worker_buttons()
+        
+        # 显示自动分配结果
+        total_assigned = sum(len(labels) for labels in self.worker_labels.values())
+        QMessageBox.information(
+            self,
+            "工位配置加载完成",
+            f"已从配置加载并自动分配 {total_assigned} 个标签到各工位\n"
+            f"剩余可用标签: {len(self.left_labels)}"
+        )
 
     def _create_choice_dialog(self, display_data, title="请选择对应的选项"):
         """
@@ -259,28 +338,6 @@ class MainWindowLogic(QMainWindow):
         
         return dialog
 
-    def _emit_worker_labels(self):
-        """
-        构建并发射工位标签二维列表信号
-        格式: [[0,2], [1], [3], [], []]
-        第一维: 5个工位
-        第二维: 每个工位的标签ID列表
-        """
-        # 初始化5个空列表
-        worker_array = [[] for _ in range(5)]
-        
-        # 按工位顺序填充标签ID
-        for i in range(5):
-            worker_name = f"工位{i}"
-            if worker_name in self.worker_labels:
-                # 提取该工位的所有标签ID（确保是字符串类型）
-                ids = [int(label["id"]) for label in self.worker_labels[worker_name]]
-                worker_array[i] = ids
-        
-        # 发射信号
-        self.bus.worker.emit(worker_array)
-        print(f"【调试】发射工位标签信号: {worker_array}")
-
     def _get_selected_ids(self, dialog):
         """从对话框获取选中的ID列表"""
         selected_ids = []
@@ -291,6 +348,28 @@ class MainWindowLogic(QMainWindow):
                 if id_item:
                     selected_ids.append(id_item.text())
         return selected_ids
+
+    def _emit_worker_labels(self):
+        """
+        构建并发射工位标签二维列表信号
+        格式: [[0,2], [1], [3], [], []]
+        第一维: 5个工位
+        第二维: 每个工位的标签ID列表（整数列表）
+        """
+        # 初始化5个空列表
+        worker_array = [[] for _ in range(5)]
+        
+        # 按工位顺序填充标签ID
+        for i in range(5):
+            worker_name = f"工位{i}"
+            if worker_name in self.worker_labels:
+                # 提取该工位的所有标签ID（转换为整数）
+                ids = [int(label["id"]) for label in self.worker_labels[worker_name]]
+                worker_array[i] = ids
+        
+        # 发射信号
+        self.bus.worker.emit(worker_array)
+        print(f"【调试】发射工位标签信号: {worker_array}")
 
     def _update_worker_buttons(self):
         """更新工位按钮文本，显示已分配标签数量"""
@@ -443,7 +522,6 @@ class MainWindowLogic(QMainWindow):
                     f"工位 {worker_name} 已分配 {len(selected_labels)} 个标签\n剩余标签数: {len(self.left_labels)}"
                 )
                 
-                # TODO: 暂时不发送信号
                 print(f"工位 {worker_name} 已分配标签: {[l['id'] for l in selected_labels]}")
                 
                 if not self.left_labels:
