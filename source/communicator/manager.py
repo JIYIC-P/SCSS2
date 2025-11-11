@@ -105,15 +105,81 @@ class Manager():
                 print(f"[WARN] hhit stop failed: {e}")
             self.hhit = None
             
-    def setmode(self,mode):
+    def setmode(self, mode):
         """
-        根据传入的mode来选择启动和停止哪些对象及其线程
+        根据传入的mode来选择启动和停止哪些对象及其线程。
+        保留原有对象，仅根据模式差异调整线程状态。
         """
         if self.mode == mode:
-           
+            print("模式未改变，无需切换")
             return
-        self.stop()
+
+        print(f"切换模式：从 {self.mode} 到 {mode}")
+
+        # 保存当前模式的线程状态
+        old_mode = self.mode
+
+        # 根据目标模式调整对象线程状态
+        if mode in ('clip', 'yolo'):
+            # 新模式需要两个相机
+            if self.camera0 is None:
+                self.camera0 = camera.ThreadedCamera(0)
+            if self.camera1 is None:
+                self.camera1 = camera.ThreadedCamera(1)
+            
+            # 启动或重新启动相机线程
+            if not self.camera0.camera_opened:
+                self.camera0.init_camera()
+            if not self.camera1.camera_opened:
+                self.camera1.init_camera()
+
+            # 如果之前是其他模式，停止不需要的对象
+            if old_mode != 'clip' and old_mode != 'yolo':
+                if self.pcie is not None:
+                    self.pcie.stop()
+                if self.hhit is not None:
+                    self.hhit.stop()
+
+        elif mode == 'color':
+            # 新模式只需要一个相机
+            if self.camera0 is None:
+                self.camera0 = camera.ThreadedCamera(0)
+            
+            # 启动或重新启动相机线程
+            if not self.camera0.camera_opened:
+                self.camera0.init_camera()
+
+            # 如果之前是其他模式，停止不需要的对象
+            if old_mode != 'color':
+                if self.camera1 is not None:
+                    self.camera1.stop()
+                if self.pcie is not None:
+                    self.pcie.stop()
+                if self.hhit is not None:
+                    self.hhit.stop()
+
+        elif mode == 'hhit':
+            # 新模式需要 TCP 接收器
+            if self.hhit is None:
+                self.hhit = hhit.ClassifierReceiver()
+            
+            # 启动或重新启动 TCP 接收器
+            if not self.hhit.is_running():
+                self.hhit.start(server_ip=self.bus.cfg.get('tcp', 'address', 'ip'),
+                                port=self.bus.cfg.get('tcp', 'address', 'port'),
+                                rcv_buf_size=1000)
+
+            # 如果之前是其他模式，停止不需要的对象
+            if old_mode != 'hhit':
+                if self.camera0 is not None:
+                    self.camera0.stop()
+                if self.camera1 is not None:
+                    self.camera1.stop()
+                if self.pcie is not None:
+                    self.pcie.stop()
+
+        # 更新当前模式
         self.mode = mode
-        self.start()
+        print(f"模式切换完成，当前模式：{self.mode}")
 
 
