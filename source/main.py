@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QApplication
 from Ui.Ui_logic import MainWindowLogic
 from communicator.manager import Manager
 from logic.logic_handler import Updater                
+from common.data_bus import DataBus
 
 app = QApplication(sys.argv)
 cfg = None
@@ -20,7 +21,6 @@ comm_mgr  = Manager()
 logic_mgr = Updater(comm_mgr)
 
 # 5. 信号连线（跨线程自动排队）
-from common.data_bus import DataBus
 bus = DataBus()
 bus.mode_changed.connect(comm_mgr.setmode)
 bus.mode_changed.connect(logic_mgr.setmode)

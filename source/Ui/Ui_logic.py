@@ -17,14 +17,16 @@ class ChooseColorDialog(QDialog):
         self.ui.setupUi(self)
         self.setWindowTitle("模式选择")
         self.ui.label.setText(f"是否选择{mode}模式？")
-        self.ui.buttonBox.accepted.connect(self.on_accept)
-        self.ui.buttonBox.rejected.connect(self.on_reject)
+        self.ui.buttonBox.accepted.connect(self.accept)
+        self.ui.buttonBox.rejected.connect(self.reject)
 
-    def on_accept(self):
-        self.accept()
 
-    def on_reject(self):
-        self.reject()
+    # def on_accept(self):
+    #     self.accept()
+
+
+    # def on_reject(self):
+    #     self.reject()
 
 
 
@@ -46,6 +48,8 @@ class MainWindowLogic(QMainWindow):
         self.bus.camera1_img.connect(self.update_secondframe)
 
 
+
+
     def ndarry2pixmap(self,array: np.ndarray):
         height, width, channel = array.shape
         bytes_per_line = width * channel
@@ -64,6 +68,8 @@ class MainWindowLogic(QMainWindow):
     
     def update_mianframe(self,array: np.ndarray):
         self.ui.lab_ShowFrame0Pic.setPixmap(self.ndarry2pixmap(array))
+
+
     def update_secondframe(self,array: np.ndarray):
         self.ui.lab_ShowFrame1Pic.setPixmap(self.ndarry2pixmap(array))
 
