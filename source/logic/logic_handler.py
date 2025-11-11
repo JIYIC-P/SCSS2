@@ -16,7 +16,7 @@ from common.config_manager import ConfigManager
 
 import time
 from threading import Thread
-
+import asyncio
 
 import cv2
 import numpy as np
@@ -172,6 +172,7 @@ class Updater():
         """
 
         cloth_id = result["ID"]          # 衣服类别
+        #delays
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
             if cloth_id in worker_id:                   # 找到目标工位
                 # 把衣服编号写进对应队列
@@ -187,19 +188,23 @@ class Updater():
                     self.obj[i]=0
                     if self.count_worker_queues[i]:
                         self.count_worker_queues[i].pop(0)
-                    return 1<<i#返回推杆命令
+                        return i,self.bus.cfg.get(f"{self.mode}_mode","delay").get(next((k for k,v in self.bus.cfg.get(f"{self.mode}_mode","labels").items() if v == cloth_id), None))
+                        #兄弟，留坨大的给你
+                        #id,delay
                 else:
                     self.obj.pop()        # 去掉最右边
                     self.obj.insert(0, 0) # 最左边插 0
-        return 0x0000
+        return False
         #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
 
-    def send_order(self,order):
+
+
+    def send_order(self,add,delay):
         """
         调用pcie通信对象，发送指令
         """
-        self.com_model.pcie.set_do(order)
+        asyncio.run(self.com_model.pcie.Do_bit(add,delay))
 
 
     def update(self):
@@ -212,9 +217,9 @@ class Updater():
         self.get_data()
         result= self.Judgment()
         if result is not None:
-            ORDER = self.generate_order(result)
-            self.bus.push_rods.emit(ORDER)#  发送控制指令信息
-            self.send_order(ORDER)
+            pusherid, delay = self.generate_order(result)
+            self.bus.push_rods.emit(pusherid)#  发送控制指令信息
+            self.send_order(pusherid,delay)
 
 
     def Judgment(self):

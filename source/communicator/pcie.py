@@ -24,7 +24,7 @@
 #         time.sleep(t)
 
 
-
+import asyncio
 import time
 import threading
 from ctypes import windll
@@ -146,6 +146,13 @@ class PcIeIO:
        
             return int(self._di_cache)#返回16进制数
 
+    async def push(self,ID,delay): # ID和Out地址需对应
+        await asyncio.sleep(delay)
+        dll.FY5400_DO(self.hDev,1,ID)
+        await asyncio.sleep(0.02)
+        dll.FY5400_DO(self.hDev,0,ID)
+
+        
     def set_do(self, value: int):
         """
         FUNC:线程安全写入16位DO
