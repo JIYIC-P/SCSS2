@@ -171,7 +171,9 @@ class Updater():
         3.ID： int -> 值代表衣服种类
         """
 
-        cloth_id = result["ID"]          # 衣服类别
+        cloth_id = result["ID"] 
+        delay_path=self.bus.cfg.find_key_path(self.bus.cfg(f"{self.mode}_mode"),cloth_id) 
+        delay=self.bus.get(f"{self.mode}_mode","delay",delay_path)        # 衣服类别
         #delays
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
             if cloth_id in worker_id:                   # 找到目标工位
@@ -188,9 +190,7 @@ class Updater():
                     self.obj[i]=0
                     if self.count_worker_queues[i]:
                         self.count_worker_queues[i].pop(0)
-                        return i,self.bus.cfg.get(f"{self.mode}_mode","delay").get(next((k for k,v in self.bus.cfg.get(f"{self.mode}_mode","labels").items() if v == cloth_id), None))
-                        #兄弟，留坨大的给你
-                        #id,delay
+                        return i,delay
                 else:
                     self.obj.pop()        # 去掉最右边
                     self.obj.insert(0, 0) # 最左边插 0

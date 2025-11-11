@@ -8,7 +8,7 @@ class ConfigManager:
     def __init__(self):
         with self._lock:
             self._user_file = pathlib.Path(__file__).parent.parent.parent / r"settings//user_config.json"  # 用户配置信息
-            self._default_file = pathlib.Path(__file__).parent.parent.parent / r"settingsdefault_config.json"  # 默认配置信息
+            self._default_file = pathlib.Path(__file__).parent.parent.parent / r"settings//default_config.json"  # 默认配置信息
             try:
 
                 if self._user_file.exists():
@@ -44,6 +44,20 @@ class ConfigManager:
             cfg[keys[-1]] = value
 
             self._user_file.write_text(json.dumps(self._cfg, indent=2), encoding='utf-8')
+    def find_key_path(self, nested_dict, target_value, path=()):
+        for key, value in nested_dict.items():
+            if isinstance(value, dict):  # 如果值是字典，递归查找
+                result = self.find_key_path(value, target_value, path + (key,))
+                if result:
+                    return result  # 返回递归结果
+            elif value == target_value:  # 找到目标值
+                return key  # 返回当前键
+        return None  # 如果没有找到，返回 None
 if __name__ == '__main__':
     cfg = ConfigManager()
-    print(cfg.get("color_mode"))
+    mode="yolo"
+    delay_key=cfg.find_key_path(cfg.get(f"{mode}_mode"),1) 
+    print(delay_key)
+    delay=cfg.get(f"{mode}_mode","delay",delay_key)
+
+    print(delay)
