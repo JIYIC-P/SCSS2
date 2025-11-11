@@ -101,6 +101,11 @@
       "toy": 0,
       "shoe": 1,
       "bag": 2
+    },
+    "delay": {
+      "toy": 0.001,
+      "shoe": 0.0,
+      "bag": 0.0
     }
   },
   "yoloworker": [
