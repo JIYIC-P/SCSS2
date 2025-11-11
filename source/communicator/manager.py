@@ -109,6 +109,9 @@ class Manager():
         """
         根据传入的mode来选择启动和停止哪些对象及其线程
         """
+        if self.mode == mode:
+           
+            return
         self.stop()
         self.mode = mode
         self.start()

@@ -9,6 +9,7 @@ root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 
 from common.config_manager import ConfigManager
+
 class ThreadedCamera:
     """
     相机类，提供相机线程用于抓取图片和设置相机参数
@@ -40,9 +41,7 @@ class ThreadedCamera:
         self.resolution = data.get("camera","config","resolution")
         self.brightness = data.get("camera","config","brightness")
         self.contrast = data.get("camera","config","contrast")
-
-        
-
+  
     def init_camera(self):
         """
         I: 无显式输入（依赖类实例已初始化的source等参数）
@@ -120,7 +119,7 @@ class ThreadedCamera:
             if self.cap is None or not self.camera_opened:
                 try:
                     self.open_cam()
-                    self.set_camera()
+                    # self.set_camera()
                     self.camera_opened = True
                 except Exception as e:
                     print(f"打开相机失败: {e}")
@@ -243,18 +242,18 @@ class ThreadedCamera:
 
 
 # 使用示例
-if __name__ == '__main__':
-    camera = ThreadedCamera(0)
-    camera.init_camera()
-    camera.list_camera_properties()
-    try:
-        while True:
-            frame = camera.grab_frame()
-            if frame is not None:
-                cv2.imshow("Camera Feed", frame)
+# if __name__ == '__main__':
+#     camera = ThreadedCamera(0)
+#     camera.init_camera()
+#     camera.list_camera_properties()
+#     try:
+#         while True:
+#             frame = camera.grab_frame()
+#             if frame is not None:
+#                 cv2.imshow("Camera Feed", frame)
             
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-    finally:
-        camera.close_cam()
-        cv2.destroyAllWindows()
+#             if cv2.waitKey(1) & 0xFF == ord('q'):
+#                 break
+#     finally:
+#         camera.close_cam()
+#         cv2.destroyAllWindows()

@@ -96,30 +96,30 @@ class colorClass:
 
 
 # ====================== 单张图片测试 =======================
-if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-    root = Path(__file__).resolve().parent.parent
-    sys.path.insert(0, str(root))
+# if __name__ == "__main__":
+#     import sys
+#     from pathlib import Path
+#     root = Path(__file__).resolve().parent.parent
+#     sys.path.insert(0, str(root))
 
-    from communicator.camera import ThreadedCamera
-    import time
-    camera = ThreadedCamera(0)
-    camera.init_camera()
-    t = time.time()
-    t1 = time.time()
+#     from communicator.camera import ThreadedCamera
+#     import time
+#     camera = ThreadedCamera(0)
+#     camera.init_camera()
+#     t = time.time()
+#     t1 = time.time()
   
-    test1=colorClass()
-    while t1 - t < 10:
-        t1 = time.time()
+#     test1=colorClass()
+#     while t1 - t < 10:
+#         t1 = time.time()
 
-        frame = camera.grab_frame()
+#         frame = camera.grab_frame()
 
-        if frame is not None:
-            vis, hsv_avg, color_id =test1.match_color(frame)
-            print(f"HSV 均值 -> {hsv_avg}")
-            print(f"匹配结果 -> color_id={color_id}")
-            cv2.imshow("color_result", vis)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            camera.close_cam()
-            break
+#         if frame is not None:
+#             vis, hsv_avg, color_id =test1.match_color(frame)
+#             print(f"HSV 均值 -> {hsv_avg}")
+#             print(f"匹配结果 -> color_id={color_id}")
+#             cv2.imshow("color_result", vis)
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             camera.close_cam()
+#             break

@@ -141,6 +141,7 @@ class Updater():
 
 
     def setmode(self,mode):
+      
         self.mode = mode
         self.com_model.setmode(mode)
 
