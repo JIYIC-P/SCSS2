@@ -49,6 +49,8 @@ class MainWindowLogic(QMainWindow):
         self.bus.camera0_img.connect(self.update_mianframe)
         self.bus.camera1_img.connect(self.update_secondframe)
 
+        ## 延时配置
+        self.ui.btn_SetDelay.clicked.connect(self.set_delay)
         # 工位标签存储
         self.worker_labels = {}  # {工位名称: [{"id": ..., "text": ..., "color": QColor}, ...]}
         self.original_labels = None  # 保存原始完整标签，用于重置
@@ -114,7 +116,7 @@ class MainWindowLogic(QMainWindow):
             self.current_mode = new_mode
             cfg_key = f"{new_mode}_mode"
             self.lables = self.bus.cfg.get(cfg_key, "labels")
-            
+            self.show_delay()
             if self.lables is None:
                 QMessageBox.warning(self, "警告", 
                     f"无法加载 {mode_text} 模式的标签配置！\n配置键: {cfg_key}")
@@ -533,3 +535,99 @@ class MainWindowLogic(QMainWindow):
     def update_do_led(self, do):
         for i in range(5):
             self.leds[i].setStyleSheet("background:red" if do & (1 << i) else "background:gray")
+
+    def show_delay(self):
+        """
+        从self.bus.cfg读取当前模式的延时配置并显示到tableWidget_2
+        只有"延时"列可编辑，格式为浮点数，保留3位小数
+        """
+        if not self.current_mode:
+            QMessageBox.warning(self, "警告", "请先选择模式！")
+            return
+        
+        # 获取标签和延时配置
+        labels_cfg = self.bus.cfg.get(f"{self.current_mode}_mode", "labels", default={})
+        delay_cfg = self.bus.cfg.get(f"{self.current_mode}_mode", "delay", default={})
+        
+        if not labels_cfg:
+            QMessageBox.information(self, "提示", "当前模式没有标签配置")
+            return
+        
+        # 设置表格
+        table = self.ui.tableWidget_2
+        table.clearContents()
+        table.setRowCount(len(labels_cfg))
+        table.setColumnCount(2)
+        table.setHorizontalHeaderLabels(['名称', '延时'])
+        
+        # 填充数据
+        for row, (key, value) in enumerate(labels_cfg.items()):
+            # 名称列（只读）
+            name_item = QTableWidgetItem(str(key))
+            name_item.setFlags(Qt.ItemIsEnabled)
+            table.setItem(row, 0, name_item)
+            
+            # 延时列（可编辑）
+            delay_value = delay_cfg.get(key, 0.0)
+            delay_item = QTableWidgetItem(f"{float(delay_value):.3f}")
+            delay_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable)
+            table.setItem(row, 1, delay_item)
+        
+        # 优化表格宽度（新增部分）
+        table.resizeColumnsToContents()
+        table.horizontalHeader().setStretchLastSection(True)  # 最后一列拉伸填充
+        table.setMinimumWidth(400)  # 设置表格最小宽度
+        # 设置列最小宽度保证显示效果
+        table.setColumnWidth(0, max(table.columnWidth(0), 150))  # 名称列至少150px
+        table.setColumnWidth(1, max(table.columnWidth(1), 100))  # 延时列至少100px
+
+    def set_delay(self):
+        """
+        从tableWidget_2读取用户编辑的延时数据并写入self.bus.cfg
+        只读取"延时"列的浮点数值
+        """
+        if not self.current_mode:
+            QMessageBox.warning(self, "警告", "请先选择模式！")
+            return
+        
+        table = self.ui.tableWidget_2
+        delay_dict = {}
+        
+        # 遍历所有行读取数据
+        for row in range(table.rowCount()):
+            try:
+                # 获取名称（作为配置键）
+                name_item = table.item(row, 0)
+                if not name_item:
+                    continue
+                key = name_item.text()
+                
+                # 获取延时值
+                delay_item = table.item(row, 1)
+                if not delay_item:
+                    delay_dict[key] = 0.0
+                    continue
+                
+                # 解析并验证延时值
+                delay_str = delay_item.text().strip()
+                if not delay_str:
+                    delay_dict[key] = 0.0
+                else:
+                    delay_value = float(delay_str)
+                    delay_dict[key] = round(delay_value, 3)  # 保留3位小数
+                    
+            except ValueError:
+                QMessageBox.warning(self, "格式错误", 
+                    f"第 {row+1} 行的延时值不是有效的数字！")
+                return
+            except Exception as e:
+                QMessageBox.critical(self, "错误", f"读取数据失败: {e}")
+                return
+        
+        # 写入配置
+        try:
+            self.bus.cfg.set(f"{self.current_mode}_mode", "delay", value=delay_dict)
+            QMessageBox.information(self, "成功", f"延时配置已保存！\n共保存 {len(delay_dict)} 条记录")
+            print(f"【调试】保存延时配置: {delay_dict}")
+        except Exception as e:
+            QMessageBox.critical(self, "保存失败", f"写入配置文件时出错: {e}")
