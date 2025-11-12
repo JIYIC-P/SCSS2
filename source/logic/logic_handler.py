@@ -84,7 +84,7 @@ class Updater():
         self.bus.worker.connect(self.setworker)
         self.bus.do_push.connect(self.doPush)
         self.bus.color_set.connect(self.setColor)
-        self.bus.color_range.connect(self.colorRange)
+        
         
         
 
@@ -103,13 +103,13 @@ class Updater():
         self.push_signal=not self.push_signal
     def setColor(self):
         self.setcolor_signal=not self.setcolor_signal
-    def colorRange(self,color_id,color_range):
-        if self.color_mode is None:
-            self.color_mode=color_mode()
-        if self.frame0 is not None:
-            hsv=self.color_mode.segment_one(self.frame0)
-            Value=[hsv,color_range]
-            self.bus.cfg.set("color_mode","labels",str(color_id),value=Value)
+    # def colorRange(self,color_id,color_range):
+    #     if self.color_mode is None:
+    #         self.color_mode=color_mode()
+    #     if self.frame0 is not None:
+    #         hsv=self.color_mode.segment_one(self.frame0)
+    #         Value=[hsv,color_range]
+    #         self.bus.cfg.set("color_mode","labels",str(color_id),value=Value)
 
 
 
@@ -228,7 +228,7 @@ class Updater():
         """
         调用pcie通信对象，发送指令
         """
-        asyncio.run(self.com_model.pcie.Do_bit(add,delay))
+        asyncio.run(self.com_model.pcie.push(add,delay))
 
 
     def update(self):
@@ -267,18 +267,23 @@ class Updater():
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
-            if self.setcolor_signal is False:
-                if self.color_mode is None:
-                    self.color_mode=color_mode()
-                if self.frame0 is not None:
-                    frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+            if self.color_mode is None:
+                self.color_mode=color_mode()
+            if self.frame0 is not None:
+                frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+                if self.setcolor_signal is False:
                     _,_,ID=self.color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
                     self.count+=1
                     self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
                     self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
                     self.bus.algo_result.emit({"ID": ID, "count": self.count})
-
                     return {"ID": ID, "count": self.count}
+                else:
+                    hsv=self.color_mode.segment_one(frame_cut0)
+                    self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
+                    self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
+                    self.bus.color_hsv.emit(hsv)
+                    return None
         if self.mode=='clip':
             if self.clip_mode is None:
                 self.clip_mode=clip_mode()

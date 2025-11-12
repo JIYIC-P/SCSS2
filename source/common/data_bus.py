@@ -12,7 +12,6 @@ class DataBus(QObject):
     worker           = pyqtSignal(list)   #手动设置工位讯息
     do_push          = pyqtSignal()  #控制推杆模式
     color_set        =pyqtSignal()    #颜色控制
-    color_range      =pyqtSignal(int, int)    #颜色id和范围
 
     # ========= 通信 → 前端 =========
     pcie_di_update   = pyqtSignal(int)          # 16 位 DI
@@ -23,6 +22,7 @@ class DataBus(QObject):
 
     # ========= 逻辑 → 前端 =========
     algo_result      = pyqtSignal(dict)         # 识别结果
+    color_hsv        =pyqtSignal(list)   #识别的hsv
     push_rods        = pyqtSignal(int)          # 实际下发的 DO
     
     cfg = ConfigManager()
