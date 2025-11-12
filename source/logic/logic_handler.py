@@ -174,6 +174,7 @@ class Updater():
         cloth_id = result["ID"] 
         delay_key=self.bus.cfg.find_key_path(self.bus.cfg.get(f"{self.mode}_mode"),cloth_id) 
         delay=self.bus.cfg.get(f"{self.mode}_mode","delay",delay_key)        # 衣服类别
+        
         #delays
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
             if cloth_id in worker_id:                   # 找到目标工位
@@ -181,7 +182,6 @@ class Updater():
                 self.count_worker_queues[idx].append(result["count"])
                 #把衣服编号写入对应obj
                 self.obj[0]=result["count"]
-        
         for i in range(len(self.worker)):
             if len(self.count_worker_queues[i]) == 0:
                 continue
@@ -194,7 +194,7 @@ class Updater():
                 else:
                     self.obj.pop()        # 去掉最右边
                     self.obj.insert(0, 0) # 最左边插 0
-        return False
+        return None,None
         #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
 
@@ -216,10 +216,12 @@ class Updater():
         """
         self.get_data()
         result= self.Judgment()
+
         if result is not None:
             pusherid, delay = self.generate_order(result)
-            self.bus.push_rods.emit(pusherid)#  发送控制指令信息
-            self.send_order(pusherid,delay)
+            if pusherid is not None:
+                self.bus.push_rods.emit(pusherid)#  发送控制指令信息
+                self.send_order(pusherid,delay)
 
 
     def Judgment(self):

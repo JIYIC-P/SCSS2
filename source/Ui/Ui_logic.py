@@ -300,25 +300,25 @@ class MainWindowLogic(QMainWindow):
         table.horizontalHeader().setStretchLastSection(True)
         
         # 创建控制按钮布局
-        btn_layout = QHBoxLayout()
+        btn_Layout = QHBoxLayout()
         
-        select_all_btn = QPushButton("全选")
-        select_all_btn.clicked.connect(table.selectAll)
+        btn_SelectAll = QPushButton("全选")
+        btn_SelectAll.clicked.connect(table.selectAll)
         
-        clear_btn = QPushButton("清空")
-        clear_btn.clicked.connect(table.clearSelection)
+        btn_Clear = QPushButton("清空")
+        btn_Clear.clicked.connect(table.clearSelection)
         
         count_label = QLabel("已选中: 0")
         
-        btn_layout.addWidget(select_all_btn)
-        btn_layout.addWidget(clear_btn)
-        btn_layout.addStretch()
-        btn_layout.addWidget(count_label)
+        btn_Layout.addWidget(btn_SelectAll)
+        btn_Layout.addWidget(btn_Clear)
+        btn_Layout.addStretch()
+        btn_Layout.addWidget(count_label)
         
         # 创建按钮框
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.accepted.connect(dialog.accept)
-        button_box.rejected.connect(dialog.reject)
+        btn_Box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btn_Box.accepted.connect(dialog.accept)
+        btn_Box.rejected.connect(dialog.reject)
         
         # 更新选中计数
         def update_count():
@@ -328,9 +328,9 @@ class MainWindowLogic(QMainWindow):
         table.itemSelectionChanged.connect(update_count)
         
         # 组装布局
-        main_layout.addLayout(btn_layout)
+        main_layout.addLayout(btn_Layout)
         main_layout.addWidget(table)
-        main_layout.addWidget(button_box)
+        main_layout.addWidget(btn_Box)
         
         dialog.setLayout(main_layout)
         dialog.setMinimumSize(400, 300)
@@ -421,13 +421,13 @@ class MainWindowLogic(QMainWindow):
         layout.addWidget(table)
         
         # 按钮框
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.button(QDialogButtonBox.Ok).setText("确定")
-        button_box.button(QDialogButtonBox.Cancel).setText("取消选中并重新分配")
-        button_box.accepted.connect(dialog.accept)
-        button_box.rejected.connect(dialog.reject)
+        btn_Box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        btn_Box.button(QDialogButtonBox.Ok).setText("确定")
+        btn_Box.button(QDialogButtonBox.Cancel).setText("取消选中并重新分配")
+        btn_Box.accepted.connect(dialog.accept)
+        btn_Box.rejected.connect(dialog.reject)
         
-        layout.addWidget(button_box)
+        layout.addWidget(btn_Box)
         dialog.setLayout(layout)
         dialog.setMinimumSize(400, 300)
         
@@ -554,7 +554,7 @@ class MainWindowLogic(QMainWindow):
             return
         
         # 设置表格
-        table = self.ui.tableWidget_2
+        table = self.ui.tab_Delay
         table.clearContents()
         table.setRowCount(len(labels_cfg))
         table.setColumnCount(2)
