@@ -1,7 +1,7 @@
 {
   "camera": {
     "config": {
-      "fps": 90,
+      "fps": 45,
       "exposure": -6,
       "resolution": [
         1900,
@@ -69,6 +69,20 @@
       "underwear": 9,
       "shoe": 10,
       "dress": 11
+    },
+    "delay": {
+      "T-shirt": 0.0,
+      "black clothing": 0.0,
+      "winter clothing": 0.0,
+      "summer clothing": 0.0,
+      "plush toy": 0.0,
+      "down jacket": 0.0,
+      "wallet": 0.0,
+      "sweater": 0.0,
+      "leggings": 0.0,
+      "underwear": 0.0,
+      "shoe": 0.0,
+      "dress": 0.0
     }
   },
   "hhit_mode": {
@@ -80,6 +94,15 @@
       "90\u68c9": 4,
       "50\u68c9": 5,
       "\u5176\u5b83": 6
+    },
+    "delay": {
+      "\u6da4": 0.0,
+      "90\u6da4": 0.0,
+      "50\u6da4": 0.0,
+      "\u68c9": 0.0,
+      "90\u68c9": 0.0,
+      "50\u68c9": 0.0,
+      "\u5176\u5b83": 0.0
     }
   },
   "qt": {
@@ -103,33 +126,19 @@
       "bag": 2
     },
     "delay": {
-      "toy": 0.001,
+      "toy": 0.0,
       "shoe": 0.0,
       "bag": 0.0
     }
   },
-  "yoloworker": [
-    [
-      0,
-      1,
-      2
-    ],
-    [],
-    [],
-    [],
-    []
-  ],
   "colorworker": [
-    [
-      0,
-      1
-    ],
+    [],
     [],
     [],
     [],
     []
   ],
-  "clipworker": [
+  "yoloworker": [
     [],
     [],
     [],
