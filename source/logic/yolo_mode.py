@@ -19,7 +19,7 @@ class yoloClass:
     def __init__(self,data=None):
         if data is None:
             self.cfg=ConfigManager()
-            self.path=self.cfg.get("yolo_mode","path","pt")
+            self.path=Path(self.cfg.get("yolo_mode","path","pt"))
         else:
             self.path=data
     def match_shape(self,frame0: np.ndarray,frame1:np.ndarray):
