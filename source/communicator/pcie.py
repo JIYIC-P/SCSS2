@@ -147,10 +147,11 @@ class PcIeIO:
             return int(self._di_cache)#返回16进制数
 
     async def push(self,ID,delay): # ID和Out地址需对应
-        await asyncio.sleep(delay)
-        dll.FY5400_DO(self.hDev,1,ID)
-        await asyncio.sleep(0.02)
-        dll.FY5400_DO(self.hDev,0,ID)
+        if ID is not None:
+            await asyncio.sleep(delay)
+            dll.FY5400_DO(self.hDev,1,ID)
+            await asyncio.sleep(0.02)
+            dll.FY5400_DO(self.hDev,0,ID)
 
         
     def set_do(self, value: int):
@@ -172,21 +173,19 @@ class PcIeIO:
         dll.FY5400_CloseDevice(self.hDev)
 
     # ---------------- 内部实现 ----------------s
-    def _worker(self, interval: float):
-        """
-        FUNC:后台线程函数：循环读DI
-        I:param interval: 采样周期，秒
-        O:无
-        """
-        #TODO : 
+# 后台线程
+    def _worker(self, interval):
         while self._running.is_set():
             with self._lock:
-                di = dll.FY5400_DI(self.hDev)      # 读硬件
-                self.status = self.status_judg(di)
-                #TODO ：此处已修改，但是后续调用变量并未作修改
-                if self.send_sig :
-                    pass#发self.order
+                di = dll.FY5400_DI(self.hDev)
+                self._di_cache = di
+                self._status = self.status_judg(di)    # 只在这里算一次
             time.sleep(interval)
+
+    # 主线程
+    def get_status(self):
+        with self._lock:
+            return self._status
 
 # ---------------- 简单测试 ----------------
 if __name__ == "__main__":

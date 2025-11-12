@@ -147,11 +147,12 @@ class Updater():
         3.获取hhit统计结果/原始信息
         """
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
-       
+      
         self.bus.pcie_di_update.emit(self.pcie_signal)  #发射相机一数据
        
 
-        self.pcie_status=self.com_model.pcie.status_judg(self.pcie_signal)
+        self.pcie_status = self.com_model.pcie.get_status()
+   
         if self.com_model.mode in ('clip', 'yolo'): 
             if self.com_model.camera0 is None or self.com_model.camera1 is None:
                 print("[ERROR] 相机未正确初始化！")
@@ -218,7 +219,7 @@ class Updater():
                 else:
                     self.obj.pop()        # 去掉最右边
                     self.obj.insert(0, 0) # 最左边插 0
-        return False
+        return None,None
         #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
 
@@ -241,7 +242,9 @@ class Updater():
         self.get_data()
         result= self.Judgment()
         if result is not None and self.push_signal is True:
+          
             pusherid, delay = self.generate_order(result)
+          
             self.bus.push_rods.emit(pusherid)#  发送控制指令信息
             self.send_order(pusherid,delay)
 
@@ -271,6 +274,7 @@ class Updater():
                 self.color_mode=color_mode()
             if self.frame0 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+                
                 if self.setcolor_signal is False:
                     _,_,ID=self.color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
                     self.count+=1
