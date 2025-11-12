@@ -261,11 +261,12 @@ class Updater():
                 frame, ID, _ = self.yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
                 self.count+=1
-
-                self.bus.algo_result.emit({"ID": ID, "count": self.count})
                 '''这里应该返回，还没有结束'''
+                print("pppp")
                 self.bus.camera0_img.emit(frame) #发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(frame_cut1)#发射相机二元数据
+                self.bus.algo_result.emit({"ID": ID, "count": self.count})
+              
                 
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}

@@ -1,14 +1,14 @@
 import json
 import threading
-import pathlib
+from pathlib import Path
 
 class ConfigManager:
     _lock = threading.RLock()
 
     def __init__(self):
         with self._lock:
-            self._user_file = pathlib.Path(__file__).parent.parent.parent / r"settings//user_config.json"  # 用户配置信息
-            self._default_file = pathlib.Path(__file__).parent.parent.parent / r"settings//default_config.json"  # 默认配置信息
+            self._user_file = Path(__file__).parent.parent.parent / r"settings//user_config.json"  # 用户配置信息
+            self._default_file = Path(__file__).parent.parent.parent / r"settings//default_config.json"  # 默认配置信息
             try:
 
                 if self._user_file.exists():
@@ -41,6 +41,11 @@ class ConfigManager:
                 if key not in cfg:
                     cfg[key] = {}
                 cfg = cfg[key]
+
+            # ✅ 处理路径字符串
+            if isinstance(value, (str, Path)):
+                value = str(Path(value)).replace("\\", "/")
+
             cfg[keys[-1]] = value
 
             self._user_file.write_text(json.dumps(self._cfg, indent=2), encoding='utf-8')
@@ -55,5 +60,6 @@ class ConfigManager:
         return None  # 如果没有找到，返回 None
 if __name__ == '__main__':
     cfg = ConfigManager()
-    cfg.set("color_mode","labels","7",value=[[],6])
+    
+    cfg.set("yolo_mode","path","pt",value="Lib/best.pt")
   
