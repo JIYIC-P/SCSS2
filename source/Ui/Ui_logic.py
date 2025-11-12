@@ -51,6 +51,10 @@ class MainWindowLogic(QMainWindow):
 
         ## 延时配置
         self.ui.btn_SetDelay.clicked.connect(self.set_delay)
+
+        ## 设置自定义颜色
+
+
         # 工位标签存储
         self.worker_labels = {}  # {工位名称: [{"id": ..., "text": ..., "color": QColor}, ...]}
         self.original_labels = None  # 保存原始完整标签，用于重置
@@ -67,6 +71,275 @@ class MainWindowLogic(QMainWindow):
             "工位3": self.ui.btn_SetWorker3,
             "工位4": self.ui.btn_SetWorker4
         }
+        
+        # 存储当前选中的行ID
+        self.selected_color_id = None
+
+    def colormode_init(self):
+        self.ui.btn_Add.clicked.connect(self.add_column)
+        self.ui.btn_Delete.clicked.connect(self.delete_selected_color_row)
+        self.ui.btn_LoadColor.clicked.connect(self.LoadColor)
+        self.ui.tab_Color.itemSelectionChanged.connect(self.on_color_row_selected)
+        self.ui.btn_SetColor.clicked.connect(self.set_color)
+        self.bus.color_hsv.connect(self.update_color_hsv)
+
+    # ==================== 辅助函数 ====================
+    
+    def LoadColor(self):
+        self.show_colorange()
+        self.bus.color_set.emit()
+
+    def hsv_to_qcolor(self, hsv_list):
+        """将HSV列表 [h, s, v] 转换为 QColor"""
+        if not hsv_list or len(hsv_list) != 3:
+            return QColor(128, 128, 128)  # 默认灰色
+        
+        h, s, v = hsv_list
+        
+        # 规范化：h:0-360, s:0-255, v:0-255
+        h = max(0, min(360, float(h)))
+        s = max(0, min(255, float(s)))
+        v = max(0, min(255, float(v)))
+        
+        # 转换为RGB
+        s_norm = s / 255.0
+        v_norm = v / 255.0
+        
+        c = v_norm * s_norm
+        x = c * (1 - abs(((h / 60.0) % 2) - 1))
+        m = v_norm - c
+        
+        if 0 <= h < 60:
+            r, g, b = c, x, 0
+        elif 60 <= h < 120:
+            r, g, b = x, c, 0
+        elif 120 <= h < 180:
+            r, g, b = 0, c, x
+        elif 180 <= h < 240:
+            r, g, b = 0, x, c
+        elif 240 <= h < 300:
+            r, g, b = x, 0, c
+        else:
+            r, g, b = c, 0, x
+        
+        r = int((r + m) * 255)
+        g = int((g + m) * 255)
+        b = int((b + m) * 255)
+        
+        return QColor(r, g, b)
+    
+    def get_next_color_id(self):
+        """获取下一个可用的ID"""
+        existing_ids = []
+        row_count = self.ui.tab_Color.rowCount()
+        
+        for row in range(row_count):
+            item = self.ui.tab_Color.item(row, 0)
+            if item:
+                existing_ids.append(item.text())
+        
+        # 找到最大的数字ID
+        max_id = -1
+        for id_str in existing_ids:
+            try:
+                max_id = max(max_id, int(id_str))
+            except ValueError:
+                pass
+        
+        return str(max_id + 1)
+    
+    def on_color_row_selected(self):
+        """表格行选中回调"""
+        selected_items = self.ui.tab_Color.selectedItems()
+        if not selected_items:
+            self.selected_color_id = None
+            return
+        
+        # 获取选中的行
+        row = selected_items[0].row()
+        id_item = self.ui.tab_Color.item(row, 0)
+        
+        if id_item:
+            self.selected_color_id = id_item.text()
+            # 预留：触发HSV设置对话框
+            # self.open_hsv_picker(self.selected_color_id)
+    
+    # ==================== 核心功能函数 ====================
+    
+    def show_colorange(self):
+        """
+        从bus.cfg中获取color label信息，然后通过表格显示出来
+        表格对象是ui.tab_Color
+        """
+        # 清空表格
+        self.ui.tab_Color.clearContents()
+        
+        # 获取color_mode配置
+        color_labels = self.bus.cfg.get("color_mode", "labels", default={})
+        
+        if not color_labels:
+            self.ui.tab_Color.setRowCount(0)
+            return
+        
+        # 设置表格行数
+        self.ui.tab_Color.setRowCount(len(color_labels))
+        
+        # 设置列宽（可选）
+        self.ui.tab_Color.setHorizontalHeaderLabels(["ID", "颜色预览", "Range"])
+        self.ui.tab_Color.setColumnWidth(0, 50)   # ID列较窄
+        self.ui.tab_Color.setColumnWidth(1, 80)   # 颜色预览列
+        self.ui.tab_Color.setColumnWidth(2, 100)  # Range编辑列
+        
+        # 填充数据
+        for row, (label_id, data) in enumerate(color_labels.items()):
+            # 解析数据: [[h,s,v], range]
+            hsv_values = data[0] if len(data) > 0 else [0, 0, 0]
+            range_value = data[1] if len(data) > 1 else 5
+            
+            # 第0列：ID
+            id_item = QTableWidgetItem(str(label_id))
+            id_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+            self.ui.tab_Color.setItem(row, 0, id_item)
+            
+            # 第1列：颜色预览
+            color = self.hsv_to_qcolor(hsv_values)
+            color_item = QTableWidgetItem("")
+            color_item.setBackground(color)
+            color_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+            self.ui.tab_Color.setItem(row, 1, color_item)
+            
+            # 第2列：Range（可编辑）
+            range_item = QTableWidgetItem(str(range_value))
+            range_item.setFlags(
+                Qt.ItemFlag.ItemIsSelectable | 
+                Qt.ItemFlag.ItemIsEnabled | 
+                Qt.ItemFlag.ItemIsEditable
+            )
+            self.ui.tab_Color.setItem(row, 2, range_item)
+        
+        # 启用整行选择
+        self.ui.tab_Color.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+    
+    def add_column(self):
+        """
+        添加一行额外的colorlabel
+        新的id递增生成，range默认为5
+        """
+        # 获取新ID
+        new_id = self.get_next_color_id()
+        
+        # 添加新行
+        row = self.ui.tab_Color.rowCount()
+        self.ui.tab_Color.insertRow(row)
+        
+        # 第0列：ID（不可编辑）
+        id_item = QTableWidgetItem(new_id)
+        id_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+        self.ui.tab_Color.setItem(row, 0, id_item)
+        
+        # 第1列：颜色预览（初始灰色）
+        color_item = QTableWidgetItem("")
+        color_item.setBackground(QColor(128, 128, 128))
+        color_item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+        self.ui.tab_Color.setItem(row, 1, color_item)
+        
+        # 第2列：Range（默认可编辑）
+        range_item = QTableWidgetItem("5")
+        range_item.setFlags(
+            Qt.ItemFlag.ItemIsSelectable | 
+            Qt.ItemFlag.ItemIsEnabled | 
+            Qt.ItemFlag.ItemIsEditable
+        )
+        self.ui.tab_Color.setItem(row, 2, range_item)
+        # 自动选中新行
+        self.ui.tab_Color.selectRow(row)
+    
+    def set_color(self):
+        """
+        调用cfg.set()写入colorlabel
+        从表格读取数据并保存到JSON
+        """
+        row_count = self.ui.tab_Color.rowCount()
+        if row_count == 0:
+            return
+        
+        # 构建要保存的数据结构
+        color_labels = {}
+        
+        for row in range(row_count):
+            # 读取ID
+            id_item = self.ui.tab_Color.item(row, 0)
+            if not id_item:
+                continue
+            label_id = id_item.text()
+            
+            # 读取Range（并验证范围）
+            range_item = self.ui.tab_Color.item(row, 2)
+            if not range_item:
+                continue
+            
+            try:
+                range_value = int(range_item.text())
+                # 限制range范围在0-25
+                range_value = max(0, min(25, range_value))
+            except ValueError:
+                range_value = 5  # 默认值
+            
+            # 获取颜色预览的HSV值（这里需要您后续实现）
+            # 暂时从单元格数据中获取，如果存在的话
+            # 新添加的行可能还没有HSV值
+            hsv_values = [0, 0, 0]  # 默认值
+            
+            # 检查是否已有HSV数据（从原始配置中保留）
+            existing_data = self.bus.cfg.get("color_mode", "labels", label_id, default=None)
+            if existing_data and isinstance(existing_data, list) and len(existing_data) > 0:
+                hsv_values = existing_data[0]
+            
+            # 构建数据项
+            color_labels[label_id] = [hsv_values, range_value]
+        
+        # 使用cfg.set()写入
+        self.bus.cfg.set("color_mode", "labels", value=color_labels)
+        
+        # 可选：显示保存成功提示
+        QMessageBox.information(self, "保存成功", "颜色标签配置已保存！")
+    
+    # ==================== 预留槽函数（供您后续实现） ====================
+    
+    def delete_selected_color_row(self):
+        """删除选中的颜色标签行"""
+        selected_items = self.ui.tab_Color.selectedItems()
+        if not selected_items:
+            return
+        
+        row = selected_items[0].row()
+        self.ui.tab_Color.removeRow(row)
+        
+        # 注意：这里不会立即保存到JSON，需要用户点击保存按钮
+    
+    def update_color_hsv(self, hsv_values):
+        """
+        通过回调更新当前选中行的颜色HSV值
+        调用此函数后更新表格预览
+        """
+        # 如果没有选中任何行，直接返回不执行
+        if self.selected_color_id is None:
+            return
+        
+        # 查找对应选中的行
+        for row in range(self.ui.tab_Color.rowCount()):
+            id_item = self.ui.tab_Color.item(row, 0)
+            if id_item and id_item.text() == str(self.selected_color_id):
+                # 更新颜色预览
+                color = self.hsv_to_qcolor(hsv_values)
+                color_item = self.ui.tab_Color.item(row, 1)
+                if color_item:
+                    color_item.setBackground(color)
+                
+                # 注意：HSV值的持久化存储需要在调用set_color()时处理
+                # 这里仅更新UI显示
+                break
+
 
     def ndarry2pixmap(self, array: np.ndarray):
         height, width, channel = array.shape
@@ -114,6 +387,10 @@ class MainWindowLogic(QMainWindow):
         
         if result == QDialog.Accepted:
             self.current_mode = new_mode
+
+            if self.current_mode == "color":
+                self.colormode_init()
+
             cfg_key = f"{new_mode}_mode"
             self.lables = self.bus.cfg.get(cfg_key, "labels")
             self.show_delay()
