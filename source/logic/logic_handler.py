@@ -172,8 +172,8 @@ class Updater():
         """
 
         cloth_id = result["ID"] 
-        delay_path=self.bus.cfg.find_key_path(self.bus.cfg(f"{self.mode}_mode"),cloth_id) 
-        delay=self.bus.get(f"{self.mode}_mode","delay",delay_path)        # 衣服类别
+        delay_key=self.bus.cfg.find_key_path(self.bus.cfg(f"{self.mode}_mode"),cloth_id) 
+        delay=self.bus.cfg.get(f"{self.mode}_mode","delay",delay_key)        # 衣服类别
         #delays
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
             if cloth_id in worker_id:                   # 找到目标工位
