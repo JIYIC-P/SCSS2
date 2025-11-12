@@ -55,9 +55,5 @@ class ConfigManager:
         return None  # 如果没有找到，返回 None
 if __name__ == '__main__':
     cfg = ConfigManager()
-    mode="yolo"
-    delay_key=cfg.find_key_path(cfg.get(f"{mode}_mode"),1) 
-    print(delay_key)
-    delay=cfg.get(f"{mode}_mode","delay",delay_key)
-
-    print(delay)
+    cfg.set("color_mode","labels","7",value=[[],6])
+  

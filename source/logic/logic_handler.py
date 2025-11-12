@@ -76,7 +76,7 @@ class Updater():
         self.yolo_mode=None
         self.hhit_mode=None
 
-        self.push_signal=False
+        self.push_signal=True
         self.setcolor_signal=False
 
         self.bus.mode_changed.connect(self.setmode)
@@ -100,11 +100,18 @@ class Updater():
 
 
     def doPush(self):
-       self.push_signal=not self.push_signal
+        self.push_signal=not self.push_signal
     def setColor(self):
-        pass
-    def colorRange(self):
-        pass
+        self.setcolor_signal=not self.setcolor_signal
+    def colorRange(self,color_id,color_range):
+        if self.color_mode is None:
+            self.color_mode=color_mode()
+        if self.frame0 is not None:
+            hsv=self.color_mode.segment_one(self.frame0)
+            Value=[hsv,color_range]
+            self.bus.cfg.set("color_mode","labels",str(color_id),value=Value)
+
+
 
 
     def run(self):
@@ -191,7 +198,6 @@ class Updater():
         cloth_id = result["ID"] 
         delay_key=self.bus.cfg.find_key_path(self.bus.cfg.get(f"{self.mode}_mode"),cloth_id) 
         delay=self.bus.cfg.get(f"{self.mode}_mode","delay",delay_key)        # 衣服类别
-        
         #delays
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
             if cloth_id in worker_id:                   # 找到目标工位
@@ -199,6 +205,7 @@ class Updater():
                 self.count_worker_queues[idx].append(result["count"])
                 #把衣服编号写入对应obj
                 self.obj[0]=result["count"]
+        
         for i in range(len(self.worker)):
             if len(self.count_worker_queues[i]) == 0:
                 continue
@@ -211,7 +218,7 @@ class Updater():
                 else:
                     self.obj.pop()        # 去掉最右边
                     self.obj.insert(0, 0) # 最左边插 0
-        return None,None
+        return False
         #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
 
@@ -233,12 +240,10 @@ class Updater():
         """
         self.get_data()
         result= self.Judgment()
-
-        if result is not None:
+        if result is not None and self.push_signal is True:
             pusherid, delay = self.generate_order(result)
-            if pusherid is not None:
-                self.bus.push_rods.emit(pusherid)#  发送控制指令信息
-                self.send_order(pusherid,delay)
+            self.bus.push_rods.emit(pusherid)#  发送控制指令信息
+            self.send_order(pusherid,delay)
 
 
     def Judgment(self):
@@ -262,18 +267,18 @@ class Updater():
                 return {"ID": ID, "count": self.count}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
+            if self.setcolor_signal is False:
+                if self.color_mode is None:
+                    self.color_mode=color_mode()
+                if self.frame0 is not None:
+                    frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
+                    _,_,ID=self.color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
+                    self.count+=1
+                    self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
+                    self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
+                    self.bus.algo_result.emit({"ID": ID, "count": self.count})
 
-            if self.color_mode is None:
-                self.color_mode=color_mode()
-            if self.frame0 is not None:
-                frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
-                _,_,ID=self.color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
-                self.count+=1
-                self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
-                self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
-                self.bus.algo_result.emit({"ID": ID, "count": self.count})
-
-                return {"ID": ID, "count": self.count}
+                    return {"ID": ID, "count": self.count}
         if self.mode=='clip':
             if self.clip_mode is None:
                 self.clip_mode=clip_mode()
