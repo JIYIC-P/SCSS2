@@ -76,9 +76,15 @@ class Updater():
         self.yolo_mode=None
         self.hhit_mode=None
 
+        self.push_signal=False
+        self.setcolor_signal=False
+
         self.bus.mode_changed.connect(self.setmode)
         self.bus.manual_cmd.connect(self.send_order)
         self.bus.worker.connect(self.setworker)
+        self.bus.do_push.connect(self.doPush)
+        self.bus.color_set.connect(self.setColor)
+        self.bus.color_range.connect(self.colorRange)
         
         
 
@@ -88,6 +94,17 @@ class Updater():
 
 
         # pice signal : 0xFFFF--> 0,1,2,3,4,5：目前有效位，这六位转化为上升下降沿信号： 0 ：上升沿 1 ：下降沿 -1 ：保持
+
+
+
+
+
+    def doPush(self):
+       self.push_signal=not self.push_signal
+    def setColor(self):
+        pass
+    def colorRange(self):
+        pass
 
 
     def run(self):
