@@ -52,7 +52,8 @@ class MainWindowLogic(QMainWindow):
         ## 延时配置
         self.ui.btn_SetDelay.clicked.connect(self.set_delay)
 
-        ## 设置自定义颜色
+        ## 推杆控制
+        self.ui.btn_ShiftPusher.clicked.connect(self.bus.do_push.emit)
 
 
         # 工位标签存储
@@ -339,7 +340,6 @@ class MainWindowLogic(QMainWindow):
                 # 注意：HSV值的持久化存储需要在调用set_color()时处理
                 # 这里仅更新UI显示
                 break
-
 
     def ndarry2pixmap(self, array: np.ndarray):
         height, width, channel = array.shape
