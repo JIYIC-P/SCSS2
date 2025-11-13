@@ -48,6 +48,9 @@ class MainWindowLogic(QMainWindow):
         ## 五个推杆
         self.bus.push_rods.connect(self.update_do_led)
 
+        ## 六个传感器
+        self.bus.pcie_di.connect(self.update_in_led)
+
         ## 两个画面
         self.bus.camera0_img.connect(self.update_mianframe)
         self.bus.camera1_img.connect(self.update_secondframe)
@@ -858,6 +861,8 @@ class MainWindowLogic(QMainWindow):
         self.ui.btn_InStatus2.setStyleSheet("background:green" if (di & (1 << 2)) == 1 else "background:red")
         self.ui.btn_InStatus3.setStyleSheet("background:green" if (di & (1 << 3)) == 1 else "background:red")
         self.ui.btn_InStatus4.setStyleSheet("background:green" if (di & (1 << 4)) == 1 else "background:red")
+        self.ui.btn_InStatus5.setStyleSheet("background:green" if (di & (1 << 5)) == 1 else "background:red")
+
 
 
     def show_delay(self):
