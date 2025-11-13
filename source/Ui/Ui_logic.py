@@ -47,6 +47,7 @@ class MainWindowLogic(QMainWindow):
         
         ## 五个推杆
         self.bus.pcie_do.connect(self.update_do_led)
+        self.ui.btn_PusherStatus0.clicked.connect(self.bus.manual_cmd.emit)
 
         ## 六个传感器
         self.bus.pcie_di.connect(self.update_in_led)
@@ -87,6 +88,11 @@ class MainWindowLogic(QMainWindow):
         self.pusher_timer = QTimer()
         self.pusher_timer.setSingleShot(True)
         self.pusher_timer.timeout.connect(self._on_pusher_timeout)
+
+    def push(self):
+        btn = self.sender()
+        txt = btn.text()[2]
+        self.bus.manual_cmd.emit(int(txt)-1)
 
     def _on_pusher_timeout(self):
         # ✅ 定时器超时后，清除当前推出状态，UI自动恢复为红色
