@@ -148,8 +148,8 @@ class Updater():
         3.获取hhit统计结果/原始信息
         """
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
-      
-        self.bus.pcie_di_update.emit(self.pcie_signal)  #发射相机一数据
+
+        self.bus.pcie_di.emit(self.pcie_signal)  #发射相机一数据
        
 
         self.pcie_status = self.com_model.pcie.get_status()
