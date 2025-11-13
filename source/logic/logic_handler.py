@@ -246,7 +246,7 @@ class Updater():
           
             pusherid, delay = self.generate_order(result)
           
-            self.bus.push_rods.emit(pusherid)#  发送控制指令信息
+            self.bus.pcie_do.emit(pusherid)#  发送控制指令信息
             self.send_order(pusherid,delay)
 
 
