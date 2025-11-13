@@ -60,6 +60,7 @@ class ConfigManager:
         return None  # 如果没有找到，返回 None
 if __name__ == '__main__':
     cfg = ConfigManager()
-    
-    cfg.set("yolo_mode","path","pt",value="Lib/best.pt")
-  
+    ID=2
+    NAME=cfg.find_key_path(cfg.get(f"yolo_mode"),ID)
+
+    print(NAME)
