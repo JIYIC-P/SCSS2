@@ -149,9 +149,9 @@ class PcIeIO:
     async def push(self,ID,delay): # ID和Out地址需对应
         if ID is not None:
             await asyncio.sleep(delay)
-            dll.FY5400_DO(self.hDev,1,ID)
+            dll.FY5400_DO_Bit(self.hDev,1,ID)
             await asyncio.sleep(0.02)
-            dll.FY5400_DO(self.hDev,0,ID)
+            dll.FY5400_DO_Bit(self.hDev,0,ID)
 
         
     def set_do(self, value: int):
