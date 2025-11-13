@@ -90,7 +90,7 @@
 
     "yolo_mode":{
         "path":{
-            "pt":"Lib\best.pt"
+            "pt":"Lib/best.pt"
         },
         "labels":{
             "toy":0,

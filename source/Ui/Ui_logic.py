@@ -387,10 +387,6 @@ class MainWindowLogic(QMainWindow):
         
         if result == QDialog.Accepted:
             self.current_mode = new_mode
-
-            if self.current_mode == "color":
-                self.colormode_init()
-
             cfg_key = f"{new_mode}_mode"
             self.lables = self.bus.cfg.get(cfg_key, "labels")
             self.show_delay()
@@ -400,6 +396,9 @@ class MainWindowLogic(QMainWindow):
                 return
                 
             print(f"【调试】成功加载标签数据: {type(self.lables)}, 数量: {len(self.lables)}")
+
+            if self.current_mode == "color":
+                self.colormode_init()
             
             # 保存原始标签用于重置
             self.original_labels = self.lables.copy()
@@ -409,7 +408,6 @@ class MainWindowLogic(QMainWindow):
             self.worker_labels.clear()
             self.bus.mode_changed.emit(self.current_mode)
             self._update_worker_buttons()
-            
             # ==== 新增：加载工位配置并自动映射 ====
             self._load_and_apply_worker_config(new_mode)
             
@@ -421,6 +419,12 @@ class MainWindowLogic(QMainWindow):
                 "模式切换成功", 
                 f"已切换到 {mode_text} 模式\n剩余 {len(self.left_labels)} 个标签待分配"
             )
+
+    def update_result(self,result:list):
+        if self.current_mode == "color":
+            self.ui.lab_ShowFrame0Txt.setText(f"\t\t主视角  ID:{result[0]}")
+        elif self.current_mode in "clip","":
+            self.ui.lab_ShowFrame0Txt.setText(f"\t\t主视角  ID:{result[0]}\tLabel:{result[1]}")
 
     def _convert_labels_for_display(self, raw_labels):
         """

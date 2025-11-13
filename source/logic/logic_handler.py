@@ -101,6 +101,7 @@ class Updater():
 
     def doPush(self):
         self.push_signal=not self.push_signal
+
     def setColor(self):
         self.setcolor_signal=not self.setcolor_signal
     # def colorRange(self,color_id,color_range):
@@ -262,10 +263,10 @@ class Updater():
                 #这里有点小问题，ID是否有效
                 self.count+=1
                 '''这里应该返回，还没有结束'''
-                print("pppp")
+               
                 self.bus.camera0_img.emit(frame) #发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(frame_cut1)#发射相机二元数据
-                self.bus.algo_result.emit({"ID": ID, "count": self.count})
+                self.bus.result.emit({"ID": ID, "count": self.count})
               
                 
                 return {"ID": ID, "count": self.count}
@@ -281,7 +282,7 @@ class Updater():
                     self.count+=1
                     self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
                     self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
-                    self.bus.algo_result.emit({"ID": ID, "count": self.count})
+                    self.bus.result.emit({"ID": ID, "count": self.count})
                     return {"ID": ID, "count": self.count}
                 else:
                     hsv=self.color_mode.segment_one(frame_cut0)
@@ -297,11 +298,12 @@ class Updater():
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
                 vis,_,_,ID =  self.clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
+                
                 self.count+=1
                 '''这里应该返回，还没有结束'''
                 self.bus.camera0_img.emit(vis)#发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(self.frame1) #发射相机二元数据
-                self.bus.algo_result.emit({"ID": ID, "count": self.count})
+                self.bus.result.emit({"ID": ID, "count": self.count})
 
                 return {"ID": ID, "count": self.count}
         if self.mode=='hhit':
@@ -313,7 +315,7 @@ class Updater():
             ID,_=self.hhit_mode.match_hhit(self.hhit_signal)
             self.count+=1
             self.bus.hhit_data.emit(self.hhit_signal)  #发送hhit信号
-            self.bus.algo_result.emit({"ID": ID, "count": self.count})
+            self.bus.result.emit({"ID": ID, "count": self.count})
             return {"ID": ID, "count": self.count}
 
             
