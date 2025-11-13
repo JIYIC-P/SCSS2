@@ -14,14 +14,14 @@ class DataBus(QObject):
     color_set        = pyqtSignal()             # 颜色控制
 
     # ========= 通信 → 前端 =========
-    pcie_di_update   = pyqtSignal(int)          # 16 位 DI
+    pcie_di   = pyqtSignal(int)          # 16 位 DI
 
     camera0_img      = pyqtSignal(np.ndarray)   # 图片
     camera1_img      = pyqtSignal(np.ndarray)
     hhit_data        = pyqtSignal(np.ndarray)   # np.ndarray
 
     # ========= 逻辑 → 前端 =========
-    result           = pyqtSignal(dict)         # 识别结果
+    result           = pyqtSignal(list)         # 识别结果
     color_hsv        = pyqtSignal(list)         # 识别的hsv
     push_rods        = pyqtSignal(int)          # 实际下发的 DO
     
