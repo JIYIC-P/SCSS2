@@ -15,7 +15,7 @@ class DataBus(QObject):
 
     # ========= 通信 → 前端 =========
     pcie_di          = pyqtSignal(int)          # 16 位 DI
-    pcie_do          = pyqtSignal(int)          # 实际下发的 DO
+    pcie_do          = pyqtSignal(int)          # DO的地址
 
     camera0_img      = pyqtSignal(np.ndarray)   # 图片
     camera1_img      = pyqtSignal(np.ndarray)

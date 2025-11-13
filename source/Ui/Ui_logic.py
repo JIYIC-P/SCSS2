@@ -46,7 +46,7 @@ class MainWindowLogic(QMainWindow):
         self.ui.btn_SetWorker4.clicked.connect(self.setwoker)
         
         ## 五个推杆
-        self.bus.push_rods.connect(self.update_do_led)
+        self.bus.pcie_do.connect(self.update_do_led)
 
         ## 六个传感器
         self.bus.pcie_di.connect(self.update_in_led)
