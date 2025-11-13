@@ -404,6 +404,12 @@ class MainWindowLogic(QMainWindow):
         
         if result == QDialog.Accepted:
             self.current_mode = new_mode
+            try:
+                self.bus.result.disconnect(self.update_result)  # 断开所有旧连接
+            except:
+                pass  # 如果之前未连接，会抛异常，忽略即可
+        
+            self.bus.result.connect(self.update_result)  # 重新连接
             cfg_key = f"{new_mode}_mode"
             self.lables = self.bus.cfg.get(cfg_key, "labels")
             self.show_delay()
