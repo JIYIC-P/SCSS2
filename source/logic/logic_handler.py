@@ -226,7 +226,7 @@ class Updater():
 
 
 
-    def send_order(self,add,delay):
+    def send_order(self,add,delay=0):
         """
         调用pcie通信对象，发送指令
         """
@@ -282,7 +282,7 @@ class Updater():
                     self.count+=1
                     self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
                     self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
-                    self.bus.result.emit([ID])
+                    self.bus.result.emit([ID,"none"])
                     return {"ID": ID, "count": self.count}
                 else:
                     hsv=self.color_mode.segment_one(frame_cut0)
