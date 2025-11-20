@@ -24,6 +24,7 @@ from PyQt5.QtGui import QImage,QPixmap
 '''
 工具函数
 '''
+CONFIDENCE_THRESHOLD=0.4
 def ndarray_to_qimage(img_bgr: np.ndarray) -> QImage:
     """OpenCV BGR 图 → RGB888 QImage"""
     h, w, ch = img_bgr.shape
@@ -62,10 +63,12 @@ class Updater():
         self.frame0=None
         self.frame1=None
         self.pcie_signal=None
-        self.pcie_status=None
+        self.pcie_status_up=[0]*6
+        self.pcie_status_down=[0]*6
+
         self.count=0
         self.worker=[[],[],[],[],[]]
-        self.obj=[0,0,0,0,0] #物品,暂时命名，具体含义是存放衣服序列的变化
+        self.obj=[[],[],[],[],[],[]] 
         #每个工位创建一个队列，存放要推的衣服顺序序列
         self.count_worker_queues=[[],[],[],[],[]]
         self.mode=None
@@ -84,7 +87,9 @@ class Updater():
         self.bus.worker.connect(self.setworker)
         self.bus.do_push.connect(self.doPush)
         self.bus.color_set.connect(self.setColor)
-        
+        self.bus.add_status_down.connect(self.get_status_down)
+        self.bus.add_status_up.connect(self.get_status_up)
+
         
         
 
@@ -97,7 +102,11 @@ class Updater():
 
 
 
+    def get_status_up(self,add:int):
+        self.pcie_status_up[add] = 1
 
+    def get_status_down(self,add:int):
+        self.pcie_status_down[add]=-1
 
     def doPush(self):
         self.push_signal=not self.push_signal
@@ -150,9 +159,6 @@ class Updater():
         self.pcie_signal=self.com_model.pcie.get_di() #获取pcie信息
 
         self.bus.pcie_di.emit(self.pcie_signal)  #发射相机一数据
-       
-
-        self.pcie_status = self.com_model.pcie.get_status()
    
         if self.com_model.mode in ('clip', 'yolo'): 
             if self.com_model.camera0 is None or self.com_model.camera1 is None:
@@ -203,23 +209,46 @@ class Updater():
         #delays
         for idx, worker_id in enumerate(self.worker):   # worker = [1,2,3,4,5]
             if cloth_id in worker_id:                   # 找到目标工位
-                # 把衣服编号写进对应队列
-                self.count_worker_queues[idx].append(result["count"])
-                #把衣服编号写入对应obj
-                self.obj[0]=result["count"]
+                if self.pcie_status_up[5]==1 and result["confidence"]>=CONFIDENCE_THRESHOLD:
+                    self.pcie_status_up[5]=0
+                    self.count+=1
+                    self.count_worker_queues[idx].append(self.count)
+                    #把衣服编号写入对应obj
+                    self.obj[0].append(self.count)
+
+        
+        for i in range(len(self.obj)-1):
+            if self.pcie_status_down[4-i]==-1:#判断是否触发下降沿
+                if len(self.obj[i])>0:
+                    
+                    cloth = self.obj[i].pop(0)
+                    self.obj[i+1].append(cloth)
+                    print(f"que",self.count_worker_queues,"obj",self.obj)
+
+
         
         for i in range(len(self.worker)):
             if len(self.count_worker_queues[i]) == 0:
                 continue
-            if self.pcie_status[i+1]==1:#判断是否触发上升沿
-                if self.count_worker_queues[i][0]==self.obj[i]:
-                    self.obj[i]=0
-                    if self.count_worker_queues[i]:
-                        self.count_worker_queues[i].pop(0)
-                        return i,delay
-                else:
-                    self.obj.pop()        # 去掉最右边
-                    self.obj.insert(0, 0) # 最左边插 0
+            if self.pcie_status_down[4-i]==-1:#判断是否触发下降沿
+                self.pcie_status_down[4-i]=0
+                for chance in self.count_worker_queues[i]:
+                    if chance == self.obj[i+1][0]:
+                        if len(self.obj[i+1]) > 0:
+                            self.obj[i+1].pop(0)
+                        if self.count_worker_queues[i]:
+                            if len(self.count_worker_queues[i]) > 0:
+
+                                self.count_worker_queues[i].pop(0)
+                            return 4-i,delay
+                    else:
+                        if i+1 < len(self.obj):
+                            if len(self.obj[i]) > 0 :
+                                move = self.obj[i].pop()
+                                self.obj[i+1].append(move)        # 去掉最右边
+
+        self.pcie_status_down = [0,0,0,0,0,0]
+        self.pcie_status_up = [0,0,0,0,0,0]
         return None,None
         #分别取每一个对列的首元素和obj[i]比较，例如  self.count_worker2与obj[1]比较                 
 
@@ -230,7 +259,14 @@ class Updater():
         """
         调用pcie通信对象，发送指令
         """
-        asyncio.run(self.com_model.pcie.push(add,delay))
+        if add is not None:
+            print("add",add)
+
+            if self.pcie_status_down[4-add] == -1:
+                self.pcie_status_down[4-add] = 0
+
+                print("push")
+                self.com_model.pcie.submit_push(add,delay)
 
 
     def update(self):
@@ -245,8 +281,9 @@ class Updater():
         if result is not None and self.push_signal is True:
           
             pusherid, delay = self.generate_order(result)
-          
+            # if result['confidence']>=CONFIDENCE_THRESHOLD:
             self.bus.pcie_do.emit(pusherid)#  发送控制指令信息
+           
             self.send_order(pusherid,delay)
 
 
@@ -259,17 +296,15 @@ class Updater():
             if self.frame0 is not None and self.frame1 is not None:
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-                frame, ID, _ = self.yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
+                frame, ID, confidence = self.yolo_mode.match_shape(frame_cut0,frame_cut1)#返回的有三个值，目前只用ID
                 #这里有点小问题，ID是否有效
-                self.count+=1
                 '''这里应该返回，还没有结束'''
-               
                 self.bus.camera0_img.emit(frame) #发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(frame_cut1)#发射相机二元数据
                 self.bus.result.emit([ID,self.bus.cfg.find_key_path(self.bus.cfg.get(f"yolo_mode"),ID)])
               
                 
-                return {"ID": ID, "count": self.count}
+                return {"ID": ID, "confidence":confidence}
                 #return {"ID": random.randint(1,5), "count": self.count}
         if self.mode=='color':
             if self.color_mode is None:
@@ -279,11 +314,10 @@ class Updater():
                 
                 if self.setcolor_signal is False:
                     _,_,ID=self.color_mode.match_color(frame_cut0)#返回的有三个值，目前只用ID
-                    self.count+=1
                     self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
                     self.bus.camera1_img.emit(frame_cut0) #发射相机二元数据
                     self.bus.result.emit([ID,"none"])
-                    return {"ID": ID, "count": self.count}
+                    return {"ID": ID, "confidence":1}
                 else:
                     hsv=self.color_mode.segment_one(frame_cut0)
                     self.bus.camera0_img.emit(self.frame0)#发射相机一裁剪后的图片
@@ -297,15 +331,13 @@ class Updater():
                 
                 frame_cut0 = cut_img(self.frame0, 470, 1136, 0, 1080)
                 frame_cut1 = cut_img(self.frame1, 470, 1136, 0, 1080)
-                vis,label,_,ID =  self.clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
-                
-                self.count+=1
+                vis,label,confidence,ID =  self.clip_mode.match_clip(frame_cut0,frame_cut1)#返回的有四个值，目前只用ID
                 '''这里应该返回，还没有结束'''
                 self.bus.camera0_img.emit(vis)#发射相机一裁剪后的图片
                 self.bus.camera1_img.emit(self.frame1) #发射相机二元数据
                 self.bus.result.emit([ID,label])
 
-                return {"ID": ID, "count": self.count}
+                return {"ID": ID, "confidence":confidence}
         if self.mode=='hhit':
             if self.hhit_mode is None:
                 self.hhit_mode=hhit_mode()
@@ -313,40 +345,11 @@ class Updater():
                 print("[警告] 未接收到高光谱信息，无法执行后续操作")
                 return
             ID,label=self.hhit_mode.match_hhit(self.hhit_signal)
-            self.count+=1
             self.bus.hhit_data.emit(self.hhit_signal)  #发送hhit信号
             self.bus.result.emit([ID,label])
-            return {"ID": ID, "count": self.count}
+            return {"ID": ID,"confidence":1}
 
             
-
-
-
-# def test_changemode_slot():
-
-#     import sys
-#     from pathlib import Path  
-#     root = Path(__file__).resolve().parent.parent
-#     sys.path.insert(0, str(root))
-
-
-#     from communicator.manager import Manager
-#     com_manager = Manager()
-#     print("当前模式:", com_manager.mode)
-    
-#     u1=Updater(com_manager)
-
-#     # ✅ 手动触发信号
-#     print("触发 mode_changed 信号，传入 'color'")
-#     u1.bus.mode_changed.emit("YOLO")
-    
-#     u1.bus.worker.emit([[1,3],[2],[],[],[]])
-
-
-
-
-# if __name__ == "__main__":
-#     test_changemode_slot()
 if __name__ == "__main__":
 
     from communicator.manager import Manager

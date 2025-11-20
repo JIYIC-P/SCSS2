@@ -34,13 +34,11 @@ class Manager():
         """
         判断哪个mode，哪个mode需要哪些通信方式
         """
+        self.pcie=pcie.PcIeIO(0)
+        self.pcie.start(0.01) #启动板卡读线程
+        print("manager start")
         if self.mode is not None:
-            
-            self.pcie=pcie.PcIeIO(0)
-            self.pcie.start() #启动板卡读线程
             if self.mode in ('clip', 'yolo'): 
-           
-
                 self.camera0 = camera.ThreadedCamera(0)
            #打开一号相机 
                 self.camera1=camera.ThreadedCamera(1)     
@@ -48,11 +46,8 @@ class Manager():
                 self.camera0.init_camera()  #打开二号相机  
                 
             elif self.mode=='color':
-                
-           
                 self.camera0 = camera.ThreadedCamera(0)
                 self.camera0.init_camera()     #打开一号相机  
-                
             elif self.mode=='hhit':
                 self.hhit= hhit.ClassifierReceiver()
                 self.hhit.start(server_ip=self.bus.cfg.get('tcp','address','ip'), port=self.bus.cfg.get('tcp','address','port'), rcv_buf_size=1000) #启动hhit接收640
@@ -61,6 +56,7 @@ class Manager():
         """
         结束线程，但保留对象状态
         """
+        print("manager stop")
         if self.mode is not None:
             if self.pcie is not None:
                 self.pcie.stop()
@@ -106,6 +102,10 @@ class Manager():
             self.hhit = None
             
     def setmode(self, mode):
+        print("manager setmode")
+        if not self.pcie._running:
+        #self.pcie=pcie.PcIeIO(0)
+            self.pcie.start(0.01) #启动板卡读线程
         """
         根据传入的mode来选择启动和停止哪些对象及其线程。
         保留原有对象，仅根据模式差异调整线程状态。
@@ -135,8 +135,7 @@ class Manager():
 
             # 如果之前是其他模式，停止不需要的对象
             if old_mode != 'clip' and old_mode != 'yolo':
-                if self.pcie is not None:
-                    self.pcie.stop()
+  
                 if self.hhit is not None:
                     self.hhit.stop()
 
@@ -153,8 +152,7 @@ class Manager():
             if old_mode != 'color':
                 if self.camera1 is not None:
                     self.camera1.stop()
-                if self.pcie is not None:
-                    self.pcie.stop()
+
                 if self.hhit is not None:
                     self.hhit.stop()
 
@@ -175,8 +173,7 @@ class Manager():
                     self.camera0.stop()
                 if self.camera1 is not None:
                     self.camera1.stop()
-                if self.pcie is not None:
-                    self.pcie.stop()
+
 
         # 更新当前模式
         self.mode = mode

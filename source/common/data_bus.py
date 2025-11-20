@@ -24,6 +24,11 @@ class DataBus(QObject):
     # ========= 逻辑 → 前端 =========
     result           = pyqtSignal(list)         # 识别结果
     color_hsv        = pyqtSignal(list)         # 识别的hsv
+
+
+    # ========= 通信 → 逻辑 =========
+    add_status_up    = pyqtSignal(int)
+    add_status_down  = pyqtSignal(int)
     
     cfg = ConfigManager()                       # 单例实现
     _instance = None
